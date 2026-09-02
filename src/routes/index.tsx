@@ -248,6 +248,36 @@ function Index() {
               </div>
             </div>
 
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="transmit">Heure réelle de transmission</Label>
+                <Input
+                  id="transmit"
+                  type="time"
+                  value={transmitTime}
+                  onChange={(e) => setTransmitTime(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="service-start">Heure de prise de service</Label>
+                <Input
+                  id="service-start"
+                  type="time"
+                  value={serviceStart}
+                  onChange={(e) => setServiceStart(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="service-end">Heure de descente</Label>
+                <Input
+                  id="service-end"
+                  type="time"
+                  value={serviceEnd}
+                  onChange={(e) => setServiceEnd(e.target.value)}
+                />
+              </div>
+            </div>
+
             {type && (
               <p className="text-xs text-muted-foreground">{hourRuleLabel(type)}</p>
             )}

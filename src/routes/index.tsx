@@ -69,6 +69,9 @@ function Index() {
   const [type, setType] = useState<MessageType | "">("");
   const [hour, setHour] = useState<string>("");
   const [minute, setMinute] = useState<string>("00");
+  const [transmitTime, setTransmitTime] = useState<string>("");
+  const [serviceStart, setServiceStart] = useState<string>("");
+  const [serviceEnd, setServiceEnd] = useState<string>("");
   const [filter, setFilter] = useState<string>("all");
   const [now, setNow] = useState<Date | null>(null);
 

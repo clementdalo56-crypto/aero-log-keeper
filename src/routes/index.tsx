@@ -334,6 +334,95 @@ function Index() {
         </div>
 
         <Card>
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-base">
+              Décompte par type de message — {periodLabel(period, now ?? new Date())}
+            </CardTitle>
+            <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
+              <SelectTrigger className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Journalier</SelectItem>
+                <SelectItem value="month">Mensuel</SelectItem>
+                <SelectItem value="year">Annuel</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type de message</TableHead>
+                  <TableHead>Attendus</TableHead>
+                  <TableHead>Dans le délai</TableHead>
+                  <TableHead>Hors délai</TableHead>
+                  <TableHead>Non transmis</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {breakdown.rows.map((r) => (
+                  <TableRow key={r.type}>
+                    <TableCell className="font-medium">{r.type}</TableCell>
+                    <TableCell className="font-mono">{r.expected ?? "—"}</TableCell>
+                    <TableCell className="font-mono text-success">
+                      {r.onTime}
+                      {r.onTimePct !== null && (
+                        <span className="ml-1 text-muted-foreground">({r.onTimePct}%)</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-destructive">
+                      {r.late}
+                      {r.latePct !== null && (
+                        <span className="ml-1 text-muted-foreground">({r.latePct}%)</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono">
+                      {r.missing ?? "—"}
+                      {r.missingPct !== null && (
+                        <span className="ml-1 text-muted-foreground">({r.missingPct}%)</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow className="border-t-2 font-semibold">
+                  <TableCell>Total</TableCell>
+                  <TableCell className="font-mono">{breakdown.totals.expected}</TableCell>
+                  <TableCell className="font-mono text-success">
+                    {breakdown.totals.onTime}
+                    {breakdown.totals.onTimePct !== null && (
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        ({breakdown.totals.onTimePct}%)
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono text-destructive">
+                    {breakdown.totals.late}
+                    {breakdown.totals.latePct !== null && (
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        ({breakdown.totals.latePct}%)
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="font-mono">
+                    {breakdown.totals.missing}
+                    {breakdown.totals.missingPct !== null && (
+                      <span className="ml-1 font-normal text-muted-foreground">
+                        ({breakdown.totals.missingPct}%)
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Les SPECI étant déclenchés à la demande, aucun décompte théorique ni « non transmis »
+              n'est calculé pour ce type.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Tableau récapitulatif</CardTitle>
           </CardHeader>

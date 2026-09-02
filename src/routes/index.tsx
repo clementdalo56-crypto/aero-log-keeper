@@ -30,6 +30,7 @@ import {
   MESSAGE_TYPES,
   computeBreakdown,
   computeStatus,
+  daysInPeriod,
   periodLabel,
   type Period,
   deadlineFrom,
@@ -108,9 +109,11 @@ function Index() {
     [records, filter],
   );
 
+  const refDate = now ?? new Date();
+  const periodDays = daysInPeriod(period, refDate, refDate);
   const breakdown = useMemo(
-    () => computeBreakdown(filtered, period, now ?? new Date(), now ?? new Date()),
-    [filtered, period, now],
+    () => computeBreakdown(filtered, period, refDate, refDate),
+    [filtered, period, refDate],
   );
 
   const stats = useMemo(() => {
@@ -344,9 +347,14 @@ function Index() {
 
         <Card>
           <CardHeader className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle className="text-base">
-              Décompte par type de message — {periodLabel(period, now ?? new Date())}
-            </CardTitle>
+            <div>
+              <CardTitle className="text-base">
+                Décompte par type de message — {periodLabel(period, refDate)}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Période de {periodDays} jour{periodDays > 1 ? "s" : ""} pris en compte
+              </p>
+            </div>
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <SelectTrigger className="w-44">
                 <SelectValue />

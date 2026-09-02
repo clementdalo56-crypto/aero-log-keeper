@@ -28,7 +28,10 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   AGENTS,
   MESSAGE_TYPES,
+  computeBreakdown,
   computeStatus,
+  periodLabel,
+  type Period,
   deadlineFrom,
   formatHM,
   hourRuleLabel,

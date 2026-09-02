@@ -109,9 +109,11 @@ function Index() {
     [records, filter],
   );
 
+  const refDate = now ?? new Date();
+  const periodDays = daysInPeriod(period, refDate, refDate);
   const breakdown = useMemo(
-    () => computeBreakdown(filtered, period, now ?? new Date(), now ?? new Date()),
-    [filtered, period, now],
+    () => computeBreakdown(filtered, period, refDate, refDate),
+    [filtered, period, refDate],
   );
 
   const stats = useMemo(() => {

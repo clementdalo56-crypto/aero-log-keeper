@@ -344,9 +344,16 @@ function Index() {
 
         <Card>
           <CardHeader className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle className="text-base">
-              Décompte par type de message — {periodLabel(period, now ?? new Date())}
-            </CardTitle>
+            <div>
+              <CardTitle className="text-base">
+                Décompte par type de message — {periodLabel(period, now ?? new Date())}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Période de {daysInPeriod(period, now ?? new Date(), now ?? new Date())} jour
+                {daysInPeriod(period, now ?? new Date(), now ?? new Date()) > 1 ? "s" : ""} pris en
+                compte
+              </p>
+            </div>
             <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
               <SelectTrigger className="w-44">
                 <SelectValue />

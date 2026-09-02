@@ -128,7 +128,9 @@ function Index() {
       toast.error("Veuillez saisir l'heure réelle de transmission.");
       return;
     }
-    const [th, tm] = transmitTime.split(":").map(Number);
+    const parts = transmitTime.split(":").map(Number);
+    const th = parts[0] ?? 0;
+    const tm = parts[1] ?? 0;
     const { status, delayMinutes } = computeStatus(hourNum, minuteNum, th, tm);
     const d = deadlineFrom(hourNum, minuteNum);
     const rec: MeteoRecord = {

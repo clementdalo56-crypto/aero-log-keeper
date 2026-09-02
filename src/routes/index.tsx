@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, CloudSun, Clock, Timer } from "lucide-reac
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -69,6 +70,9 @@ function Index() {
   const [type, setType] = useState<MessageType | "">("");
   const [hour, setHour] = useState<string>("");
   const [minute, setMinute] = useState<string>("00");
+  const [transmitTime, setTransmitTime] = useState<string>("");
+  const [serviceStart, setServiceStart] = useState<string>("");
+  const [serviceEnd, setServiceEnd] = useState<string>("");
   const [filter, setFilter] = useState<string>("all");
   const [now, setNow] = useState<Date | null>(null);
 
@@ -120,8 +124,14 @@ function Index() {
       toast.error("Heure non valide pour ce type de message.");
       return;
     }
-    const clickTime = new Date();
-    const { status, delayMinutes } = computeStatus(hourNum, minuteNum, clickTime);
+    if (!/^\d{2}:\d{2}$/.test(transmitTime)) {
+      toast.error("Veuillez saisir l'heure réelle de transmission.");
+      return;
+    }
+    const parts = transmitTime.split(":").map(Number);
+    const th = parts[0] ?? 0;
+    const tm = parts[1] ?? 0;
+    const { status, delayMinutes } = computeStatus(hourNum, minuteNum, th, tm);
     const d = deadlineFrom(hourNum, minuteNum);
     const rec: MeteoRecord = {
       id: crypto.randomUUID(),
@@ -130,9 +140,11 @@ function Index() {
       hour: hourNum,
       minute: minuteNum,
       deadline: formatHM(d.h, d.m),
-      transmittedAt: formatHM(clickTime.getHours(), clickTime.getMinutes()),
+      transmittedAt: formatHM(th, tm),
       status,
-      date: clickTime.toLocaleDateString("fr-FR"),
+      date: new Date().toLocaleDateString("fr-FR"),
+      serviceStart: serviceStart || "—",
+      serviceEnd: serviceEnd || "—",
     };
     setRecords((prev) => [rec, ...prev]);
     if (status === "Dans le délai") {
@@ -239,6 +251,36 @@ function Index() {
               </div>
             </div>
 
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="transmit">Heure réelle de transmission</Label>
+                <Input
+                  id="transmit"
+                  type="time"
+                  value={transmitTime}
+                  onChange={(e) => setTransmitTime(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="service-start">Heure de prise de service</Label>
+                <Input
+                  id="service-start"
+                  type="time"
+                  value={serviceStart}
+                  onChange={(e) => setServiceStart(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="service-end">Heure de descente</Label>
+                <Input
+                  id="service-end"
+                  type="time"
+                  value={serviceEnd}
+                  onChange={(e) => setServiceEnd(e.target.value)}
+                />
+              </div>
+            </div>
+
             {type && (
               <p className="text-xs text-muted-foreground">{hourRuleLabel(type)}</p>
             )}
@@ -305,13 +347,15 @@ function Index() {
                   <TableHead>Heure message</TableHead>
                   <TableHead>Limite (H+5)</TableHead>
                   <TableHead>Transmis à</TableHead>
+                  <TableHead>Prise de service</TableHead>
+                  <TableHead>Descente</TableHead>
                   <TableHead>Statut</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                       Aucun message enregistré pour ce filtre.
                     </TableCell>
                   </TableRow>
@@ -324,6 +368,8 @@ function Index() {
                       <TableCell className="font-mono">{formatHM(r.hour, r.minute)}</TableCell>
                       <TableCell className="font-mono">{r.deadline}</TableCell>
                       <TableCell className="font-mono">{r.transmittedAt}</TableCell>
+                      <TableCell className="font-mono">{r.serviceStart ?? "—"}</TableCell>
+                      <TableCell className="font-mono">{r.serviceEnd ?? "—"}</TableCell>
                       <TableCell>
                         <Badge
                           variant={r.status === "Dans le délai" ? "secondary" : "destructive"}

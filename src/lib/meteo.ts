@@ -185,7 +185,8 @@ export function computeBreakdown(
     const onTime = list.filter((r) => r.status === "Dans le délai").length;
     const late = list.length - onTime;
     const perDay = expectedPerDay(type);
-    const expected = perDay === null ? null : perDay * days;
+    // SPECI : attendu = nombre transmis (pas de notion de message manquant).
+    const expected = type === "SPECI" ? list.length : perDay === null ? null : perDay * days;
     const missing = expected === null ? null : Math.max(0, expected - list.length);
     const base = expected ?? list.length;
     return {

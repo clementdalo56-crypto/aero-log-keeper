@@ -123,8 +123,12 @@ function Index() {
       toast.error("Heure non valide pour ce type de message.");
       return;
     }
-    const clickTime = new Date();
-    const { status, delayMinutes } = computeStatus(hourNum, minuteNum, clickTime);
+    if (!/^\d{2}:\d{2}$/.test(transmitTime)) {
+      toast.error("Veuillez saisir l'heure réelle de transmission.");
+      return;
+    }
+    const [th, tm] = transmitTime.split(":").map(Number);
+    const { status, delayMinutes } = computeStatus(hourNum, minuteNum, th, tm);
     const d = deadlineFrom(hourNum, minuteNum);
     const rec: MeteoRecord = {
       id: crypto.randomUUID(),
@@ -133,9 +137,11 @@ function Index() {
       hour: hourNum,
       minute: minuteNum,
       deadline: formatHM(d.h, d.m),
-      transmittedAt: formatHM(clickTime.getHours(), clickTime.getMinutes()),
+      transmittedAt: formatHM(th, tm),
       status,
-      date: clickTime.toLocaleDateString("fr-FR"),
+      date: new Date().toLocaleDateString("fr-FR"),
+      serviceStart: serviceStart || "—",
+      serviceEnd: serviceEnd || "—",
     };
     setRecords((prev) => [rec, ...prev]);
     if (status === "Dans le délai") {

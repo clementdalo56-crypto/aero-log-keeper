@@ -366,6 +366,8 @@ function Index() {
                       <TableCell className="font-mono">{formatHM(r.hour, r.minute)}</TableCell>
                       <TableCell className="font-mono">{r.deadline}</TableCell>
                       <TableCell className="font-mono">{r.transmittedAt}</TableCell>
+                      <TableCell className="font-mono">{r.serviceStart ?? "—"}</TableCell>
+                      <TableCell className="font-mono">{r.serviceEnd ?? "—"}</TableCell>
                       <TableCell>
                         <Badge
                           variant={r.status === "Dans le délai" ? "secondary" : "destructive"}

@@ -105,6 +105,11 @@ function Index() {
     [records, filter],
   );
 
+  const breakdown = useMemo(
+    () => computeBreakdown(filtered, period, now ?? new Date(), now ?? new Date()),
+    [filtered, period, now],
+  );
+
   const stats = useMemo(() => {
     const total = filtered.length;
     const onTime = filtered.filter((r) => r.status === "Dans le délai").length;

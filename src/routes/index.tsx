@@ -345,13 +345,15 @@ function Index() {
                   <TableHead>Heure message</TableHead>
                   <TableHead>Limite (H+5)</TableHead>
                   <TableHead>Transmis à</TableHead>
+                  <TableHead>Prise de service</TableHead>
+                  <TableHead>Descente</TableHead>
                   <TableHead>Statut</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                       Aucun message enregistré pour ce filtre.
                     </TableCell>
                   </TableRow>

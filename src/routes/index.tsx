@@ -74,6 +74,7 @@ function Index() {
   const [serviceStart, setServiceStart] = useState<string>("");
   const [serviceEnd, setServiceEnd] = useState<string>("");
   const [filter, setFilter] = useState<string>("all");
+  const [period, setPeriod] = useState<Period>("day");
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {

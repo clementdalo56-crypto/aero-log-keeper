@@ -30,6 +30,7 @@ import {
   MESSAGE_TYPES,
   computeBreakdown,
   computeStatus,
+  daysInPeriod,
   periodLabel,
   type Period,
   deadlineFrom,

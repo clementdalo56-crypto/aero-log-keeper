@@ -83,19 +83,22 @@ export interface Record {
   transmittedAt: string;
   status: Status;
   date: string;
+  serviceStart: string;
+  serviceEnd: string;
 }
 
 /**
- * Compare l'heure réelle de transmission à l'heure limite (H+5).
+ * Compare l'heure de transmission saisie par l'agent à l'heure limite (H+5).
  * Gère le passage de minuit sur une fenêtre courte.
  */
 export function computeStatus(
   hour: number,
   minute: number,
-  now: Date,
+  transmitHour: number,
+  transmitMinute: number,
 ): { status: Status; delayMinutes: number } {
   const limit = hour * 60 + minute + 5;
-  let actual = now.getHours() * 60 + now.getMinutes();
+  let actual = transmitHour * 60 + transmitMinute;
   if (actual + 12 * 60 < limit) actual += 24 * 60; // transmission après minuit
   const delayMinutes = actual - limit;
   return { status: delayMinutes <= 0 ? "Dans le délai" : "Hors délai", delayMinutes };

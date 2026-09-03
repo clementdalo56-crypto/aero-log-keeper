@@ -152,25 +152,26 @@ if not st.session_state["authentifie"]:
                 st.rerun()
             else: st.error("❌ Mot de passe incorrect")
 else:
-    # --- MENUS LATÉRAUX ---
+        # --- MENUS LATÉRAUX ---
     st.sidebar.markdown("<h2 style='color:#f97316; margin-bottom:0;'>🏢 SODEXAM</h2><p style='color:#16a34a; font-weight:bold; margin-top:0;'>Station de San Pedro</p>", unsafe_allow_html=True)
     liste_agents = ["Dalo Clement", "Dao lea", "Adoh Bouet", "Koffi Gisele", "Djagba Aka", "Ote Armande"]
     agent_actif = st.sidebar.selectbox("👨‍💼 Agent de service :", liste_agents)
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("<p style='font-weight:bold; color:#f97316; font-size:13px;'>🗂️ MENUS DE LA STATION</p>", unsafe_allow_html=True)
-        choix_menu = st.sidebar.radio(
+    
+    # Remplacement propre et parfaitement aligné sans espaces parasites
+    choix_menu = st.sidebar.radio(
         "Sélectionnez votre tâche :",
         [
-            "📡 Saisie des Messages Réguliers",  # <-- Nom raccourci ici
-            "🌡️ Données Extrêmes", 
+            "📡 Saisie des Messages Réguliers",
+            "🌡️ Données Extrêmes",
             "🛠️ Point Instrument & Correction",
-            "🌱 AGROMET & CLIMAT", 
+            "🌱 AGROMET & CLIMAT",
             "📂 Tableau Climatologique (TCM)",
-            "⏰ Prise & Fin de Service", 
+            "⏰ Prise & Fin de Service",
             "📝 Qualité & Justifications Hors Délai",
             "📈 Tableau de bord & Décomptes"
-        ]
         ]
     )
 
@@ -181,8 +182,9 @@ else:
     # --- SÉCURITÉ : BLOCAGE AVANT SAISIE SI DESCENTE VALIDÉE ---
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
-        # --- SOUS-MENU 1 : SYNOP & METAR ---
-    if choix_menu == "📡 SYNOP & METAR":
+    # --- SOUS-MENU 1 : SAISIE DES MESSAGES RÉGULIERS ---
+    if choix_menu == "📡 Saisie des Messages Réguliers":
+
         st.subheader("📡 Saisie des Messages Réguliers (SYNOP / METAR)")
         if agent_bloque:
             st.error(f"🛑 Accès refusé : L'agent **{agent_actif}** a déjà enregistré sa fin de service pour aujourd'hui.")

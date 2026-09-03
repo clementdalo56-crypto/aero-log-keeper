@@ -383,7 +383,7 @@ else:
         couleur_rendement = "#16a34a" if taux_rendement >= 85 else ("#f97316" if taux_rendement >= 50 else "#ef4444")
         st.markdown(f"<div style='background-color: #f9fafb; padding: 15px; border-radius: 10px; text-align: center; border-left: 6px solid {couleur_rendement};'><p style='margin:0; font-size:12px; font-weight:bold; color:#6b7280;'>🎯 TAUX DE RENDEMENT RÉGLEMENTAIRE GLOBAL</p><p style='margin:5px 0 0 0; font-size:32px; font-weight:bold; color:{couleur_rendement};'>{taux_rendement:.1f} %</p></div>", unsafe_allow_html=True)
 
-        # Outils d'édition libres
+               # Outils d'édition libres
         st.markdown("---")
         st.markdown("### 🗄️ Registre Complet & Outils de Correction Rapide")
         
@@ -426,7 +426,7 @@ else:
                 if st.button("🗑️ Confirmer la Suppression", use_container_width=True):
                     df_nettoye = df_global.drop(index=id_suppr)
                     df_nettoye.drop(columns=['ID']).to_csv(FICHIER_BDD, index=False)
-st.success("💥 Message supprimé du registre avec succès.")
-st.rerun()
-else:
-st.info("ℹ️ Aucun message enregistré pour le moment.")
+                    st.success("💥 Message supprimé du registre avec succès.")
+                    st.rerun()
+        else:
+            st.info("ℹ️ Aucun message enregistré pour le moment.")

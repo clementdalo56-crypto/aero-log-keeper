@@ -12,6 +12,24 @@ from email import encoders
 st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
+    /* Ajout du logo SODEXAM en fond d'écran transparent (Filigrane) */
+    .stApp {
+        background-image: url("app/static/logo_sodexam.png"), url("logo_sodexam.png") !important;
+        background-repeat: no-repeat !important;
+        background-position: center 30% !important; /* Centré horizontalement, légèrement vers le haut */
+        background-size: 450px !important; /* Ajuste la taille du logo en fond */
+        background-attachment: fixed !important;
+    }
+    
+    /* Applique une opacité très légère (transparence) uniquement sur l'image de fond */
+    .stApp::before {
+        content: "" !important;
+        position: absolute !important;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(255, 255, 255, 0.90) !important; /* Voile blanc pour rendre le logo transparent */
+        z-index: -1 !important;
+    }
+
     <style>
     /* Fond principal blanc */
     .stApp { background-color: #ffffff !important; color: #1f2937 !important; }

@@ -329,54 +329,76 @@ else:
         st.markdown("### 🗂️ Historique des observations de la station")
         st.dataframe(pd.read_csv(FICHIER_OBS), use_container_width=True)
 
-    # --- SOUS-MENU 8 : TABLEAU DE BORD & STATISTIQUES ---
-    elif choix_menu == "📈 Tableau de bord & Statistiques":
-        st.subheader("📊 Tableau de Bord Mensuel et Annuel de la Station")
+       # --- SOUS-MENU 8 : TABLEAU DE BORD & STATISTIQUES ---
+    elif choix_menu == "📈 Tableau de bord & Décomptes":
+        st.subheader("📊 Décomptes Temporels, Taux de Réussite et Statistiques")
         df_stats = pd.read_csv(FICHIER_BDD)
-        # Décomptes temporels demandés en haut
+        
+        # --- CALCULS DES DÉCOMPTES TEMPORELS ---
         aujourdhui_dt = datetime.now()
         str_aujourdhui = aujourdhui_dt.strftime("%Y-%m-%d")
-        str_mois = aujourdhui_dt.strftime("%B")
+        
+        # Traduction manuelle des mois en français pour correspondre au format de la BDD
+        mois_fr = {
+            "January": "January", "February": "February", "March": "March", "April": "April",
+            "May": "May", "June": "June", "July": "July", "August": "August",
+            "September": "September", "October": "October", "November": "November", "December": "December"
+        }
+        str_mois = mois_fr.get(aujourdhui_dt.strftime("%B"), aujourdhui_dt.strftime("%B"))
         str_annee = aujourdhui_dt.strftime("%Y")
         
-        total_jour = len(df_stats[df_stats["Date_Saisie"] == str_aujourdhui]) if not df_stats.empty else 0
-        total_mois = len(df_stats[(df_stats["Mois"] == str_mois) & (df_stats["Annee"] == str_annee)]) if not df_stats.empty else 0
-        total_annee = len(df_stats[df_stats["Annee"] == str_annee]) if not df_stats.empty else 0
+        if not df_stats.empty:
+            total_jour = len(df_stats[df_stats["Date_Saisie"] == str_aujourdhui])
+            total_mois = len(df_stats[(df_stats["Mois"] == str_mois) & (df_stats["Annee"] == str_annee)])
+            total_annee = len(df_stats[df_stats["Annee"] == str_annee])
+            
+            # Calcul du Taux de Réussite (Dans les délais)
+            dans_delai_total = len(df_stats[df_stats['Statut_Delai'] == "Transmis dans le délai"])
+            total_messages = len(df_stats)
+            taux_reussite = (dans_delai_total / total_messages) * 100 if total_messages > 0 else 0.0
+        else:
+            total_jour, total_mois, total_annee, taux_reussite = 0, 0, 0, 0.0
         
-        dc1, dc2, dc3 = st.columns(3)
+        # Affichage des 4 cartes d'indicateurs (KPIs)
+        dc1, dc2, dc3, dc4 = st.columns(4)
         with dc1:
-            st.markdown(f'<div class="kpi-box"><div class="kpi-title">📋 Décompte Journalier (Aujourd\'hui)</div><div class="kpi-value">{total_jour} message(s)</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kpi-box"><div class="kpi-title">📋 Décompte Journalier</div><div class="kpi-value">{total_jour} message(s)</div></div>', unsafe_allow_html=True)
         with dc2:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #16a34a;"><div class="kpi-title">📅 Décompte Mensuel ({str_mois})</div><div class="kpi-value">{total_mois} message(s)</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kpi-box" style="border-top-color: #16a34a;"><div class="kpi-title">📅 Décompte Mensuel</div><div class="kpi-value">{total_mois} message(s)</div></div>', unsafe_allow_html=True)
         with dc3:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #3b82f6;"><div class="kpi-title">🗓️ Décompte Annuel ({str_annee})</div><div class="kpi-value">{total_annee} message(s)</div></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="kpi-box" style="border-top-color: #3b82f6;"><div class="kpi-title">🗓️ Décompte Annuel</div><div class="kpi-value">{total_annee} message(s)</div></div>', unsafe_allow_html=True)
+        with dc4:
+            # Carte verte si bon taux, orange sinon
+            couleur_taux = "#16a34a" if taux_reussite >= 80 else "#f97316"
+            st.markdown(f'<div class="kpi-box" style="border-top-color: {couleur_taux};"><div class="kpi-title">🎯 Taux de Réussite</div><div class="kpi-value">{taux_reussite:.1f} %</div></div>', unsafe_allow_html=True)
             
         st.markdown("---")
         
+        # --- AFFICHAGE DES TABLEAUX ET GRAPHICULES EN CAS DE DONNÉES ---
         if not df_stats.empty:
             col_f1, col_f2 = st.columns(2)
             with col_f1:
-                annee_sel = st.selectbox("Sélectionnez l'Année :", sorted(df_stats['Annee'].unique().tolist()))
+                annee_sel = st.selectbox("Filtrer par Année :", sorted(df_stats['Annee'].unique().tolist()))
             with col_f2:
-                mois_sel = st.selectbox("Sélectionnez le Mois :", ["Tous"] + sorted(df_stats[df_stats['Annee'] == annee_sel]['Mois'].unique().tolist()))
+                mois_sel = st.selectbox("Filtrer par Mois :", ["Tous"] + sorted(df_stats[df_stats['Annee'] == annee_sel]['Mois'].unique().tolist()))
             
             df_filtre = df_stats[df_stats['Annee'] == annee_sel]
             if mois_sel != "Tous":
                 df_filtre = df_filtre[df_filtre['Mois'] == mois_sel]
                 
-            st.markdown("### 📅 Synthèse Mensuelle de l'Activité")
+            st.markdown("### 📅 Synthèse Générale de l'Activité")
             tab_croise = pd.crosstab(df_filtre['Type_Message_Fichier'], df_filtre['Mois'], margins=True, margins_name="Total Général")
             st.dataframe(tab_croise, use_container_width=True)
             
             col_g1, col_g2 = st.columns(2)
             with col_g1:
-                st.markdown("**📈 Volumes par type de message/fichier**")
+                st.markdown("**📈 Volumes par type de message / fichier**")
                 st.bar_chart(df_filtre['Type_Message_Fichier'].value_counts())
             with col_g2:
                 st.markdown("**📉 Répartition du respect des délais**")
                 st.bar_chart(df_filtre['Statut_Delai'].value_counts())
                 
-            st.markdown("### 🗄️ Historique brut de la Base de Données")
+            st.markdown("### 🗄️ Historique complet de la Base de Données")
             st.dataframe(df_filtre, use_container_width=True)
         else:
-            st.info("Aucune donnée enregistrée pour le moment. Les statistiques apparaîtront après vos premières saisies.")
+            st.info("ℹ️ Aucune observation enregistrée dans la base pour le moment. Effectuez votre première saisie régulière (SYNOP ou METAR) pour activer le tableau de bord.")

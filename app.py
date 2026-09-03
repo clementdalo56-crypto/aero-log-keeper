@@ -11,7 +11,7 @@ from email import encoders
 # --- CONFIGURATION INITIALE & DESIGN GÉNÉRAL TRICOLORE ---
 st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", initial_sidebar_state="expanded")
 
-st.mst.markdown("""
+st.markdown("""
     <style>
     /* 1. FOND VERT NATIONAL SUR LES CÔTÉS DE L'APPLICATION */
     .stApp { 

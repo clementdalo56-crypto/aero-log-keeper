@@ -11,65 +11,83 @@ from email import encoders
 # --- CONFIGURATION INITIALE & DESIGN GÉNÉRAL TRICOLORE ---
 st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", initial_sidebar_state="expanded")
 
-st.markdown("""
+st.mst.markdown("""
     <style>
-    /* 1. CONFIGURATION DU FOND PRINCIPAL AVEC LOGO EN LIEN WEB PUBLIC */
+    /* 1. FOND VERT NATIONAL SUR LES CÔTÉS DE L'APPLICATION */
     .stApp { 
-        background-color: #ffffff !important; 
+        background-color: #115e59 !important; /* Beau Vert émeraude institutionnel pour les côtés */
         color: #1f2937 !important; 
-        /* Utilisation d'une URL web publique pour garantir l'affichage sur internet */
-        background-image: url("https://githubusercontent.com") !important;
-        background-repeat: no-repeat !important;
-        background-position: center 35% !important;
-        background-size: 380px !important;
-        background-attachment: fixed !important;
         z-index: 1 !important;
     }
     
-    /* Effet d'opacité douce (Filigrane) */
-    .stApp::before {
-        content: "" !important;
-        position: absolute !important;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(255, 255, 255, 0.93) !important; /* Voile blanc pour atténuer le logo */
-        z-index: -1 !important;
+    /* 2. INTERFACE CENTRALE EN ORANGE CLAIR (Zone des Formulaires) */
+    [data-testid="stForm"] { 
+        max-width: 850px !important; 
+        margin: 30px auto !important; 
+        padding: 30px !important; 
+        background-color: #fff7ed !important; /* Orange très clair / couleur crème chaleureuse */
+        border-radius: 15px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+        border: 2px solid #ffedd5 !important;
     }
     
-    /* 2. CONFIGURATION DES FORMULAIRES ET ÉLÉMENTS CENTRAUX */
-    [data-testid="stForm"] { max-width: 850px !important; margin: 0 auto !important; padding: 20px !important; }
-    
+    /* Ajustement des listes déroulantes et champs de temps pour rester centrés */
     div[data-testid="stSelectbox"], div[data-testid="stTimeInput"] {
         max-width: 750px !important;
         margin: 0 auto 15px auto !important;
     }
     
+    /* Zones de saisie de texte et de chiffres */
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
-        color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #d1d5db !important;
+        color: #111827 !important; 
+        background-color: #ffffff !important; /* Fond blanc pur dans les cases pour une lisibilité totale */
+        border: 2px solid #cbd5e1 !important;
     }
     
+    /* Correction de la visibilité de l'heure saisie */
     div[data-testid="stTimeInput"] input {
-        color: #111827 !important; background-color: #f3f4f6 !important; font-weight: bold !important;
+        color: #111827 !important; background-color: #ffffff !important; font-weight: bold !important;
     }
     
-    div[data-testid="stMarkdownContainer"] p, label p {
-        color: #111827 !important; font-family: 'Cambria', serif !important;
+    /* Écritures textuelles au centre (Police Cambria en Noir Foncé) */
+    div[data-testid="stMarkdownContainer"] p, label p, .stSubheader p {
+        color: #111827 !important; 
+        font-family: 'Cambria', serif !important;
+        font-weight: 500 !important;
     }
     
-    /* 3. DESIGN DE LA BARRE LATÉRALE */
-    [data-testid="stSidebar"] { background-color: #f3f4f6 !important; border-right: 3px solid #f97316 !important; }
+    /* 3. DESIGN DE LA BARRE LATÉRALE (Sidebar également en Vert doux pour l'harmonie) */
+    [data-testid="stSidebar"] { 
+        background-color: #134e4a !important; /* Vert plus foncé pour la barre latérale */
+        border-right: 4px solid #f97316 !important; /* Ligne de séparation Orange vif */
+    }
+    
+    /* Textes des sous-menus (Police Cambria en Blanc Éclatant pour ressortir sur le vert) */
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
-        font-family: 'Cambria', serif !important; font-size: 14px !important; font-weight: bold !important; color: #111827 !important;
+        font-family: 'Cambria', serif !important; 
+        font-size: 14px !important; 
+        font-weight: bold !important; 
+        color: #ffffff !important; /* ÉCRITURE BLANCHE SUR FOND VERT */
+    }
+    /* Titres en haut de la barre latérale */
+    [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p {
+        color: #ffffff !important;
     }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
     
-    /* 4. DESIGN DES BOUTONS DE VALIDATION (ORANGE) */
-    div.stButton > button { background-color: #f97316 !important; border-radius: 8px !important; border: none !important; padding: 10px 24px !important; }
-    div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 14px !important; }
+    /* 4. DESIGN DES BOUTONS DE VALIDATION (Orange Vif National) */
+    div.stButton > button { 
+        background-color: #f97316 !important; 
+        border-radius: 8px !important; 
+        border: none !important; 
+        padding: 12px 30px !important; 
+    }
+    div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 15px !important; }
     div.stButton > button:hover { background-color: #ea580c !important; }
     
-    /* BANDEAUX D'ALERTES */
+    /* BANDEAUX D'ALERTES ET NOTIFICATIONS */
     div[data-testid="stNotification"] { background-color: #f0fdf4 !important; border-left: 5px solid #16a34a !important; }
-    .stAlert { background-color: #fff7ed !important; border-left: 5px solid #f97316 !important; }
+    .stAlert { background-color: #ffedd5 !important; border-left: 5px solid #f97316 !important; }
     .stAlert p, .stAlert div, [data-testid="stNotification"] p { color: #1a1a1a !important; font-weight: 600 !important; font-size: 14px !important; }
     
     /* BLOCS STATISTIQUES (KPI) */
@@ -81,6 +99,7 @@ st.markdown("""
     .kpi-value { color: #111827; font-size: 24px; font-weight: bold; margin-top: 5px; }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 MOT_DE_PASSE_REQUIS = "sanpedro2026"

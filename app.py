@@ -156,6 +156,7 @@ else:
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
         # --- SOUS-MENU 1 : SYNOP & METAR ---
+    if c    # --- SOUS-MENU 1 : SYNOP & METAR ---
     if choix_menu == "📡 SYNOP & METAR":
         st.subheader("📡 Saisie des Messages Réguliers (SYNOP / METAR)")
         if agent_bloque:
@@ -163,30 +164,46 @@ else:
         else:
             with st.form("form_synop_metar"):
                 type_msg = st.selectbox("Type de message :", ["SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"])
+                
+                # Sélection de l'heure nominale de l'observation météo (ex: 18:00)
+                heures_observations = [f"{h:02d}:00" for h in range(24)]
+                heure_nominale_str = st.selectbox("🕒 Heure officielle de l'observation (H UTC) :", heures_observations, index=datetime.now().hour)
+                
                 heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
                 corps_msg = st.text_area("Texte réglementaire du message :", height=150)
                 
                 if st.form_submit_button("🚀 Valider, Archiver et Transmettre"):
                     if type_msg != "SPECI" and verifier_doublon_message(type_msg, date_saisie, heure_trans):
-                        st.error(f"❌ Enregistrement impossible : Un message **{type_msg}** a déjà été transmis à **{heure_trans.strftime('%H:%M')}** aujourd'hui. Aucun doublon autorisé.")
+                        st.error(f"❌ Enregistrement impossible : Un message {type_msg} a déjà été transmis à {heure_trans.strftime('%H:%M')} aujourd'hui.")
                     else:
-                        statut = "Transmis dans le délai" if heure_trans.minute <= 5 else "Transmis hors délai"
+                        # --- CALCUL RÉGLEMENTAIRE DE LA FENÊTRE (Entre H-10 min et H+5 min) ---
+                        heure_nominale_dt = datetime.strptime(f"{date_saisie} {heure_nominale_str}", "%Y-%m-%d %H:%M")
+                        heure_transmission_dt = datetime.strptime(f"{date_saisie} {heure_trans.strftime('%H:%M')}", "%Y-%m-%d %H:%M")
                         
-                        # DÉCLARATION CORRECTE DU TABLEAU ET DE LA LIGNE POUR ÉVITER LE NAMEERROR
+                        # Définition des bornes de la fenêtre réglementaire (Ex: 17:50 et 18:05)
+                        borne_inferieure = heure_nominale_dt - timedelta(minutes=10)
+                        borne_superieure = heure_nominale_dt + timedelta(minutes=5)
+                        
+                        # Validation stricte de la plage horaire
+                        if borne_inferieure <= heure_transmission_dt <= borne_superieure:
+                            statut = "Transmis dans le délai"
+                        else:
+                            statut = "Transmis hors délai"
+                        
+                        # Archivage en base de données locale
                         df = pd.read_csv(FICHIER_BDD)
                         nouvelle_ligne = {
                             "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
                             "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
                             "Categorie": "SYNOP & METAR", "Type_Message_Fichier": type_msg, "Heure_Transmission": heure_trans.strftime("%H:%M"),
-                            "Statut_Delai": statut, "Details": corps_msg
+                            "Statut_Delai": statut, "Details": f"[Obs: {heure_nominale_str}] {corps_msg}"
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success(f"💾 Enregistré localement. Statut : **{statut}**")
+                        st.success(f"💾 Message enregistré localement. Statut validé : **{statut}** (Fenêtre réglementaire : {borne_inferieure.strftime('%H:%M')} - {borne_superieure.strftime('%H:%M')})")
                         
-                        sujet_mail = f"[{type_msg}] Station San Pedro - {date_saisie} ({heure_trans.strftime('%H:%M')} UTC)"
+                        sujet_mail = f"[{type_msg}] Station San Pedro - Obs de {heure_nominale_str} (Transmis à {heure_trans.strftime('%H:%M')} UTC)"
                         if transmettre_message_outlook(sujet_mail, corps_msg, ["beta@sodexam.ci"]):
                             st.success("✉️ Message envoyé automatiquement par e-mail à beta@sodexam.ci")
-
     # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
         st.subheader("🌡️ Saisie des Données Extrêmes")

@@ -13,24 +13,25 @@ st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", ini
 
 st.markdown("""
     <style>
-    /* 1. CONFIGURATION DU FOND PRINCIPAL AVEC LOGO FILIGRANE */
+    /* 1. CONFIGURATION DU FOND PRINCIPAL AVEC LOGO EN LIEN WEB PUBLIC */
     .stApp { 
         background-color: #ffffff !important; 
         color: #1f2937 !important; 
-        background-image: url("app/static/logo_sodexam.png"), url("logo_sodexam.png") !important;
+        /* Utilisation d'une URL web publique pour garantir l'affichage sur internet */
+        background-image: url("https://githubusercontent.com") !important;
         background-repeat: no-repeat !important;
         background-position: center 35% !important;
-        background-size: 400px !important;
+        background-size: 380px !important;
         background-attachment: fixed !important;
         z-index: 1 !important;
     }
     
-    /* Effet d'opacité douce pour rendre le logo transparent en arrière-plan */
+    /* Effet d'opacité douce (Filigrane) */
     .stApp::before {
         content: "" !important;
         position: absolute !important;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(255, 255, 255, 0.92) !important;
+        background-color: rgba(255, 255, 255, 0.93) !important; /* Voile blanc pour atténuer le logo */
         z-index: -1 !important;
     }
     

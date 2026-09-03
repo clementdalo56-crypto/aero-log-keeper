@@ -17,32 +17,31 @@ st.markdown("""
     .stApp { background-color: #ffffff !important; color: #1f2937 !important; }
     [data-testid="stForm"] { max-width: 850px !important; margin: 0 auto !important; padding: 20px !important; }
     
+    /* MODIFICATION : Réduit la longueur des rubans noirs de sélection et les centre */
+    div[data-testid="stSelectbox"], div[data-testid="stTimeInput"] {
+        max-width: 750px !important;
+        margin: 0 auto 15px auto !important;
+    }
+    
     /* Correction des zones de saisie et textes de formulaires */
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
         color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #d1d5db !important;
     }
-        /* Force l'heure saisie par l'agent à s'afficher en Noir Foncé sur fond clair */
+    
+    /* Force l'écriture des heures saisies en Noir Foncé sur fond clair */
     div[data-testid="stTimeInput"] input {
-        color: #111827 !important;
-        background-color: #f3f4f6 !important;
-        font-weight: bold !important;
+        color: #111827 !important; background-color: #f3f4f6 !important; font-weight: bold !important;
     }
-
-    /* FORCE l'écriture de TOUS les paragraphes de texte centraux en NOIR pour éviter le texte invisible */
+    
+    /* FORCE l'écriture de TOUS les paragraphes de texte centraux en NOIR */
     div[data-testid="stMarkdownContainer"] p, label p {
-        color: #111827 !important;
-        font-family: 'Cambria', serif !important;
+        color: #111827 !important; font-family: 'Cambria', serif !important;
     }
     
     /* Design de la barre latérale */
     [data-testid="stSidebar"] { background-color: #f3f4f6 !important; border-right: 3px solid #f97316 !important; }
-    
-    /* MODIFICATION : FORCE l'écriture des sous-menus à être en TAILLE 14 et en Cambria */
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
-        font-family: 'Cambria', serif !important;
-        font-size: 14px !important; /* TAILLE AUGMENTÉE À 14 */
-        font-weight: bold !important;
-        color: #111827 !important;
+        font-family: 'Cambria', serif !important; font-size: 14px !important; font-weight: bold !important; color: #111827 !important;
     }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
     
@@ -65,6 +64,7 @@ st.markdown("""
     .kpi-value { color: #111827; font-size: 24px; font-weight: bold; margin-top: 5px; }
     </style>
 """, unsafe_allow_html=True)
+
 
 MOT_DE_PASSE_REQUIS = "sanpedro2026"
 
@@ -159,13 +159,18 @@ else:
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("<p style='font-weight:bold; color:#f97316; font-size:13px;'>🗂️ MENUS DE LA STATION</p>", unsafe_allow_html=True)
-    choix_menu = st.sidebar.radio(
+        choix_menu = st.sidebar.radio(
         "Sélectionnez votre tâche :",
         [
-            "📡 SYNOP & METAR", "🌡️ Données Extrêmes", "🛠️ Point Instrument & Correction",
-            "🌱 AGROMET & CLIMAT", "📂 Tableau Climatologique (TCM)",
-            "⏰ Prise & Fin de Service", "📝 Qualité & Justifications Hors Délai",
+            "📡 Saisie des Messages Réguliers",  # <-- Nom raccourci ici
+            "🌡️ Données Extrêmes", 
+            "🛠️ Point Instrument & Correction",
+            "🌱 AGROMET & CLIMAT", 
+            "📂 Tableau Climatologique (TCM)",
+            "⏰ Prise & Fin de Service", 
+            "📝 Qualité & Justifications Hors Délai",
             "📈 Tableau de bord & Décomptes"
+        ]
         ]
     )
 

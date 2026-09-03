@@ -163,9 +163,10 @@ else:
                 if envoyer_email_sodexam(sujet_mail, corps_msg, ["beta@sodexam.ci"]):
                     st.success("✉️ E-mail transmis avec succès.")
 
-    # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
+        # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
-        st.subheader("🌡️ Saisie des Données Extrêmes")
+        st.subheader("🌡️ Saisie des Données Extrêmes (H+24 à 06h00)")
+        st.info("Rappel : Les données extrêmes de la veille doivent être envoyées le lendemain entre 06h00 et 08h00 au plus tard.")
         with st.form("form_extremes"):
             heure_saisie = st.time_input("Heure réelle d'envoi :", maintenant.time())
             t_max = st.number_input("Température Maximale (T MAXI) en °C :", value=28.0, step=0.1)
@@ -176,13 +177,21 @@ else:
                 date_donnees = (maintenant - timedelta(days=1)).strftime("%Y-%m-%d")
                 statut = "Transmis dans le délai" if (6 <= heure_saisie.hour < 8) or (heure_saisie.hour == 8 and heure_saisie.minute == 0) else "Transmis hors délai"
                 
+                # ÉTAPE 1 : TOUJOURS SAUVEGARDER EN LOCAL
                 df = pd.read_csv(FICHIER_BDD)
                 contenu_texte = f"Données du {date_donnees} | TMAX: {t_max}°C | TMIN: {t_min}°C | Pluie: {pluie}mm"
-                nouvelle_ligne  
-                    "Date_Saisie": date_saisie, "Date_Donnees": date_donnees, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
-                    "Agent": agent_actif, "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Saisie": heure_saisie.strftime("%H:%M"),
-                    "Statut_Delai": statut, "Details": contenu_texte
-
+                nouvelle_ligne = {
+                    "Date_Saisie": date_saisie, 
+                    "Date_Donnees": date_donnees, 
+                    "Mois": maintenant.strftime("%B"), 
+                    "Annee": maintenant.strftime("%Y"),
+                    "Agent": agent_actif, 
+                    "Categorie": "Données Extrêmes", 
+                    "Type_Message_Fichier": "DONNEES EXTREMES", 
+                    "Heure_Saisie": heure_saisie.strftime("%H:%M"),
+                    "Statut_Delai": statut, 
+                    "Details": contenu_texte
+                }
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                 st.success(f"💾 Données du {date_donnees} enregistrées en local ! Statut : **{statut}**")
                 
@@ -191,6 +200,7 @@ else:
                 destins = ["service.prevision@sodexam.com"]
                 if envoyer_email_sodexam(sujet_mail, contenu_texte, destins):
                     st.success("✉️ E-mail transmis avec succès au Service Prévision.")
+
 
     # --- SOUS-MENU 3 : POINT INSTRUMENT & CORRECTION ---
     elif choix_menu == "🛠️ Point Instrument & Correction":

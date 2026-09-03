@@ -265,7 +265,7 @@ else:
                         jour = maintenant.day
                         statut = "Transmis dans le délai"
                         if type_clima == "AGROMET (Décadaire)":
-                            if (jour not in) or (heure_trans.hour >= 9): statut = "Transmis hors délai"
+                            if (jour not in 1,11,21) or (heure_trans.hour >= 9): statut = "Transmis hors délai"
                         elif type_clima == "CLIMAT (Mensuel)" and jour > 4: statut = "Transmis hors délai"
                             
                         df = pd.read_csv(FICHIER_BDD)

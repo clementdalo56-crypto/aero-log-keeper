@@ -221,39 +221,62 @@ else:
         df_p_l = pd.read_csv(FICHIER_AGENTS)
         st.dataframe(df_p_l[df_p_l["Date"] == date_saisie], use_container_width=True)
 
-    # --- SOUS-MENU 2 : SAISIE DES MESSAGES RÉGULIERS ---
+        # --- SOUS-MENU 2 : SAISIE DES MESSAGES RÉGULIERS ---
     elif choix_menu == "📡 Saisie des Messages Réguliers":
         st.subheader("📡 Saisie des Messages Réguliers")
-        if agent_bloque: st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** is noté en fin de service.")
+        if agent_bloque: st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** est noté en fin de service.")
         else:
             with st.form("form_synop_metar"):
                 type_msg = st.selectbox("Type de message :", ["SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"])
                 heures_observations = [f"{h:02d}:00" for h in range(24)]
                 heure_nominale_str = st.selectbox("🕒 Heure officielle de l'observation (H UTC) :", heures_observations, index=maintenant.hour)
-                heure_trans = st.time_input("⏱️ Heure réelle de transmission (Outlook) :", maintenant.time())
+                
+                # RECTIFICATION INFAILLIBLE : Utilisation d'un champ texte libre (st.text_input) pour figer la saisie clavier de l'agent
+                heure_trans_saisie = st.text_input("⏱️ Heure réelle de transmission (Format HH:MM, Ex: 17:59) :", value=maintenant.strftime("%H:%M"), key="champ_heure_clavier")
+                
                 corps_msg = st.text_area("Texte réglementaire du message :", height=150)
                 
                 if st.form_submit_button("🚀 Valider et Archiver le Message"):
-                    heure_definitive_str = heure_trans.strftime("%H:%M")
+                    # Nettoyage des espaces pour éviter les erreurs de format
+                    heure_definitive_str = heure_trans_saisie.strip()
+                    
+                    try:
+                        # Validation interne du format saisi par l'agent
+                        datetime.strptime(heure_definitive_str, "%H:%M")
+                    except ValueError:
+                        st.error("❌ Format d'heure invalide. Veuillez respecter le format HH:MM (Exemple: 07h15 doit s'écrire 07:15).")
+                        st.stop()
+
                     if type_msg != "SPECI" and verifier_doublon_message(type_msg, date_saisie, heure_definitive_str):
-                        st.error(f"❌ Doublon interdit : Un message {type_msg} existe déjà à cette heure.")
+                        st.error(f"❌ Doublon interdit : Un message {type_msg} existe déjà à {heure_definitive_str} aujourd'hui.")
                     else:
+                        # --- FENÊTRE RÉGLEMENTAIRE H-10 À H+5 ---
                         heure_nominale_dt = datetime.strptime(f"{date_saisie} {heure_nominale_str}", "%Y-%m-%d %H:%M")
                         heure_transmission_dt = datetime.strptime(f"{date_saisie} {heure_definitive_str}", "%Y-%m-%d %H:%M")
                         borne_inferieure = heure_nominale_dt - timedelta(minutes=10)
                         borne_superieure = heure_nominale_dt + timedelta(minutes=5)
                         
                         statut = "Transmis dans le délai" if borne_inferieure <= heure_transmission_dt <= borne_superieure else "Transmis hors délai"
+                        
+                        # Enregistrement physique en BDD
                         df = pd.read_csv(FICHIER_BDD)
                         nouvelle_ligne = {
-                            "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
-                            "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
-                            "Categorie": "SYNOP & METAR", "Type_Message_Fichier": type_msg, "Heure_Transmission": heure_definitive_str,
-                            "Statut_Delai": statut, "Details": f"[Obs: {heure_nominale_str}] {corps_msg}"
+                            "Date_Saisie": date_saisie, 
+                            "Heure_Saisie": heure_informatique, # Trace machine en arrière-plan
+                            "Date_Donnees": date_saisie,
+                            "Mois": maintenant.strftime("%B"), 
+                            "Annee": maintenant.strftime("%Y"), 
+                            "Agent": agent_actif,
+                            "Categorie": "SYNOP & METAR", 
+                            "Type_Message_Fichier": type_msg, 
+                            "Heure_Transmission": heure_definitive_str, # C'est le texte exact tapé par l'agent !
+                            "Statut_Delai": statut, 
+                            "Details": f"[Obs: {heure_nominale_str}] {corps_msg}"
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success(f"💾 Message enregistré ! Heure mémorisée : **{heure_definitive_str}** | Statut : **{statut}**")
+                        st.success(f"💾 Message enregistré avec succès ! Heure sauvegardée : **{heure_definitive_str}** | Qualification : **{statut}**")
                         transmettre_message_outlook(f"[{type_msg}] San Pedro", corps_msg, ["beta@sodexam.ci"])
+
 
     # --- SOUS-MENU 3 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":

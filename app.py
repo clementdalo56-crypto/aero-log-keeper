@@ -2,53 +2,37 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import os
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
 
 # --- CONFIGURATION INITIALE & DESIGN GÉNÉRAL TRICOLORE ---
-st.set_page_config(page_title="SODEXAM - Station de San Pedro", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
     <style>
-    /* Fond principal blanc */
     .stApp { background-color: #ffffff !important; color: #1f2937 !important; }
     [data-testid="stForm"] { max-width: 850px !important; margin: 0 auto !important; padding: 20px !important; }
     
-    /* Correction des zones de saisie et textes de formulaires */
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
         color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #d1d5db !important;
     }
     
-    /* FORCE l'écriture de TOUS les paragraphes de texte centraux en NOIR pour éviter le texte invisible */
     div[data-testid="stMarkdownContainer"] p, label p {
-        color: #111827 !important;
-        font-family: 'Cambria', serif !important;
+        color: #111827 !important; font-family: 'Cambria', serif !important;
     }
     
-    /* Design de la barre latérale */
     [data-testid="stSidebar"] { background-color: #f3f4f6 !important; border-right: 3px solid #f97316 !important; }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
-        font-family: 'Cambria', serif !important;
-        font-size: 13px !important;
-        font-weight: bold !important;
-        color: #111827 !important;
+        font-family: 'Cambria', serif !important; font-size: 13px !important; font-weight: bold !important; color: #111827 !important;
     }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
     
-    /* Design du bouton de validation */
     div.stButton > button { background-color: #f97316 !important; border-radius: 8px !important; border: none !important; padding: 10px 24px !important; }
     div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 14px !important; }
     div.stButton > button:hover { background-color: #ea580c !important; }
     
-    /* Bandeaux d'alertes */
     div[data-testid="stNotification"] { background-color: #f0fdf4 !important; border-left: 5px solid #16a34a !important; }
     .stAlert { background-color: #fff7ed !important; border-left: 5px solid #f97316 !important; }
     .stAlert p, .stAlert div, [data-testid="stNotification"] p { color: #1a1a1a !important; font-weight: 600 !important; font-size: 14px !important; }
     
-    /* Blocs statistiques (KPI) */
     .kpi-box {
         background-color: #ffffff; padding: 15px; border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e5e7eb; border-top: 4px solid #f97316;
@@ -63,54 +47,28 @@ FICHIER_BDD = "donnees_meteo_sanpedro.csv"
 FICHIER_AGENTS = "presence_agents_sanpedro.csv"
 FICHIER_OBS = "observations_qualite_sanpedro.csv"
 
-# =========================================================================
-# 🎛️ CONFIGURATION DU SERVEUR DE MESSAGERIE SODEXAM
-# =========================================================================
-SMTP_SERVEUR = "://office365.com"  
-SMTP_PORT = 587
-COMPTE_MAIL_STATION = "meteo.sanpedro@sodexam.ci" 
-COMPTE_MOT_DE_PASSE = "VotreMotDePasseIci"  
+# --- INITIALISATION COMPLÈTE ET SÉCURISÉE DES BASES DE DONNÉES ---
+# Réinitialisation propre des colonnes pour éviter tout conflit d'ancienne version (KeyError)
+colonnes_principales = ["Date_Saisie", "Heure_Saisie", "Date_Donnees", "Mois", "Annee", "Agent", "Categorie", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]
 
-def envoyer_email_sodexam(sujet, corps, destinataires, fichier_joint=None):
-    tous_les_destinataires = list(set(destinataires + ["meteo.sanpedro@sodexam.ci"]))
-    msg = MIMEMultipart()
-    msg['From'] = COMPTE_MAIL_STATION
-    msg['To'] = ", ".join(tous_les_destinataires)
-    msg['Subject'] = sujet
-    msg.attach(MIMEText(corps, 'plain'))
-    if fichier_joint is not None:
-        try:
-            part = MIMEBase('application', "octet-stream")
-            part.set_payload(fichier_joint.read())
-            encoders.encode_base64(part)
-            part.add_header('Content-Disposition', f'attachment; filename="{fichier_joint.name}"')
-            msg.attach(part)
-            fichier_joint.seek(0)
-        except Exception as e:
-            st.warning(f"⚠️ Impossible de joindre le fichier : {e}")
-            return False
+if os.path.exists(FICHIER_BDD):
     try:
-        serveur = smtplib.SMTP(SMTP_SERVEUR, SMTP_PORT, timeout=5)
-        serveur.starttls()
-        serveur.login(COMPTE_MAIL_STATION, COMPTE_MOT_DE_PASSE)
-        serveur.sendmail(COMPTE_MAIL_STATION, tous_les_destinataires, msg.as_string())
-        serveur.quit()
-        return True
-    except Exception as e:
-        st.warning(f"📢 Panne réseau temporaire ({e}).")
-        st.info("ℹ️ Sauvegarde locale effectuée avec succès.")
-        return False
+        df_verif = pd.read_csv(FICHIER_BDD)
+        # Si une colonne moderne est manquante, on recrée proprement le fichier pour purger les erreurs
+        if "Heure_Transmission" not in df_verif.columns:
+            pd.DataFrame(columns=colonnes_principales).to_csv(FICHIER_BDD, index=False)
+    except:
+        pd.DataFrame(columns=colonnes_principales).to_csv(FICHIER_BDD, index=False)
+else:
+    pd.DataFrame(columns=colonnes_principales).to_csv(FICHIER_BDD, index=False)
 
-# --- INITIALISATION DES FICHIERS CSV ---
-for fichier, colonnes in [
-    (FICHIER_BDD, ["Date_Saisie", "Date_Donnees", "Mois", "Annee", "Agent", "Categorie", "Type_Message_Fichier", "Heure_Saisie", "Statut_Delai", "Details"]),
-    (FICHIER_AGENTS, ["Date", "Agent", "Action", "Heure"]),
-    (FICHIER_OBS, ["Date", "Heure", "Agent", "Type_Observation", "Message_Concerne", "Raison_Retard_Ou_Qualite"])
-]:
-    if not os.path.exists(fichier):
-        pd.DataFrame(columns=colonnes).to_csv(fichier, index=False)
+if not os.path.exists(FICHIER_AGENTS):
+    pd.DataFrame(columns=["Date", "Agent", "Action", "Heure"]).to_csv(FICHIER_AGENTS, index=False)
 
-# --- SÉCURITÉ ---
+if not os.path.exists(FICHIER_OBS):
+    pd.DataFrame(columns=["Date", "Heure", "Agent", "Type_Observation", "Message_Concerne", "Raison_Retard_Ou_Qualite"]).to_csv(FICHIER_OBS, index=False)
+
+# --- PROTECTION PAR MOT DE PASSE ---
 if "authentifie" not in st.session_state:
     st.session_state["authentifie"] = False
 
@@ -118,11 +76,8 @@ if not st.session_state["authentifie"]:
     col_gauche, col_centre, col_droite = st.columns(3)
     with col_centre:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        if os.path.exists("logo_sodexam.png"):
-            st.image("logo_sodexam.png", use_container_width=True)
-        else:
-            st.markdown("<h1 style='text-align: center; color: #f97316;'>🏢 SODEXAM</h1>", unsafe_allow_html=True)
-        st.markdown("<h3 style='text-align: center; color: #16a34a;'>Station de San Pedro</h3>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #f97316; margin-bottom:0;'>🏢 SODEXAM</h1>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: #16a34a; margin-top:0;'>Station de San Pedro</h3>", unsafe_allow_html=True)
         st.markdown("---")
         mdp_saisi = st.text_input("🔑 Entrez le code d'accès de la station :", type="password")
         if st.button("Se connecter à l'application", use_container_width=True):
@@ -156,152 +111,121 @@ else:
 
     maintenant = datetime.now()
     date_saisie = maintenant.strftime("%Y-%m-%d")
+    heure_informatique = maintenant.strftime("%H:%M")
 
     # --- SOUS-MENU 1 : SYNOP & METAR ---
     if choix_menu == "📡 SYNOP & METAR":
-        st.subheader("📡 Transmission des Messages Réguliers (SYNOP / METAR)")
+        st.subheader("📡 Saisie des Messages Réguliers (SYNOP / METAR)")
         with st.form("form_synop_metar"):
             type_msg = st.selectbox("Type de message :", ["SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"])
-            heure_saisie = st.time_input("Heure réelle d'envoi :", maintenant.time())
+            heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
             corps_msg = st.text_area("Texte réglementaire du message :", height=150)
             
-            if st.form_submit_button("🚀 Valider et Acheminer"):
-                statut = "Transmis dans le délai" if heure_saisie.minute <= 5 else "Transmis hors délai"
+            if st.form_submit_button("🚀 Valider et Enregistrer"):
+                # Qualification réglementaire basée sur l'Heure de Transmission saisie
+                statut = "Transmis dans le délai" if heure_trans.minute <= 5 else "Transmis hors délai"
+                
                 df = pd.read_csv(FICHIER_BDD)
                 nouvelle_ligne = {
-                    "Date_Saisie": date_saisie, "Date_Donnees": date_saisie, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
-                    "Agent": agent_actif, "Categorie": "SYNOP & METAR", "Type_Message_Fichier": type_msg, "Heure_Saisie": heure_saisie.strftime("%H:%M"),
+                    "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
+                    "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                    "Categorie": "SYNOP & METAR", "Type_Message_Fichier": type_msg, "Heure_Transmission": heure_trans.strftime("%H:%M"),
                     "Statut_Delai": statut, "Details": corps_msg
                 }
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                st.success(f"💾 Enregistré localement. Statut : **{statut}**")
-                
-                sujet_mail = f"[{type_msg}] Station San Pedro - {date_saisie}"
-                if envoyer_email_sodexam(sujet_mail, corps_msg, ["beta@sodexam.ci"]):
-                    st.success("✉️ E-mail transmis avec succès.")
+                st.success(f"💾 Message enregistré localement avec succès ! Statut qualifié : **{statut}**")
 
-        # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
+    # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
-        st.subheader("🌡️ Saisie des Données Extrêmes (H+24 à 06h00)")
-        st.info("Rappel : Les données extrêmes de la veille doivent être envoyées le lendemain entre 06h00 et 08h00 au plus tard.")
+        st.subheader("🌡️ Saisie des Données Extrêmes")
         with st.form("form_extremes"):
-            heure_saisie = st.time_input("Heure réelle d'envoi :", maintenant.time())
+            heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
             t_max = st.number_input("Température Maximale (T MAXI) en °C :", value=28.0, step=0.1)
             t_min = st.number_input("Température Minimale (T MINI) en °C :", value=22.0, step=0.1)
             pluie = st.number_input("Quantité de pluie (P) en mm :", value=0.0, step=0.1)
             
             if st.form_submit_button("🚀 Enregistrer les Extrêmes"):
                 date_donnees = (maintenant - timedelta(days=1)).strftime("%Y-%m-%d")
-                statut = "Transmis dans le délai" if (6 <= heure_saisie.hour < 8) or (heure_saisie.hour == 8 and heure_saisie.minute == 0) else "Transmis hors délai"
+                # Entre 06h00 et 08h00 max
+                statut = "Transmis dans le délai" if (6 <= heure_trans.hour < 8) or (heure_trans.hour == 8 and heure_trans.minute == 0) else "Transmis hors délai"
                 
-                # ÉTAPE 1 : TOUJOURS SAUVEGARDER EN LOCAL
                 df = pd.read_csv(FICHIER_BDD)
                 contenu_texte = f"Données du {date_donnees} | TMAX: {t_max}°C | TMIN: {t_min}°C | Pluie: {pluie}mm"
                 nouvelle_ligne = {
-                    "Date_Saisie": date_saisie, 
-                    "Date_Donnees": date_donnees, 
-                    "Mois": maintenant.strftime("%B"), 
-                    "Annee": maintenant.strftime("%Y"),
-                    "Agent": agent_actif, 
-                    "Categorie": "Données Extrêmes", 
-                    "Type_Message_Fichier": "DONNEES EXTREMES", 
-                    "Heure_Saisie": heure_saisie.strftime("%H:%M"),
-                    "Statut_Delai": statut, 
-                    "Details": contenu_texte
+                    "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_donnees,
+                    "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                    "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Transmission": heure_trans.strftime("%H:%M"),
+                    "Statut_Delai": statut, "Details": contenu_texte
                 }
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                st.success(f"💾 Données du {date_donnees} enregistrées en local ! Statut : **{statut}**")
-                
-                # ÉTAPE 2 : TENTER L'ENVOI EMAIL
-                sujet_mail = f"[DONNEES EXTREMES] Station San Pedro - Obs du {date_donnees}"
-                destins = ["service.prevision@sodexam.com"]
-                if envoyer_email_sodexam(sujet_mail, contenu_texte, destins):
-                    st.success("✉️ E-mail transmis avec succès au Service Prévision.")
-
+                st.success(f"💾 Données Extrêmes enregistrées localement ! Statut qualifié : **{statut}**")
 
     # --- SOUS-MENU 3 : POINT INSTRUMENT & CORRECTION ---
     elif choix_menu == "🛠️ Point Instrument & Correction":
         st.subheader("🛠️ Point Hebdomadaire des Instruments et Chiffrement")
         with st.form("form_instruments"):
-            fichier_word = st.file_uploader("Téléverser le rapport d'instrumentation ou de chiffrement (Fichier Word) :", type=["docx", "doc"])
+            fichier_word = st.file_uploader("Téléverser le rapport d'instrumentation (Fichier Word) :", type=["docx", "doc"])
             commentaires = st.text_area("Notes ou détails des corrections de messages :")
             
-            if st.form_submit_button("🚀 Envoyer le Rapport Hebdomadaire"):
+            if st.form_submit_button("🚀 Enregistrer le Rapport"):
                 if fichier_word is not None:
                     df = pd.read_csv(FICHIER_BDD)
                     nouvelle_ligne = {
-                        "Date_Saisie": date_saisie, "Date_Donnees": date_saisie, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
-                        "Agent": agent_actif, "Categorie": "Instruments", "Type_Message_Fichier": "Rapport WORD", "Heure_Saisie": maintenant.strftime("%H:%M"),
-                        "Statut_Delai": "Transmis", "Details": f"Fichier: {fichier_word.name} | Notes: {commentaires}"
+                        "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
+                        "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                        "Categorie": "Instruments", "Type_Message_Fichier": "Rapport WORD", "Heure_Transmission": heure_informatique,
+                        "Statut_Delai": "Transmis dans le délai", "Details": f"Fichier: {fichier_word.name} | Notes: {commentaires}"
                     }
                     pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                    st.success(f"💾 Rapport enregistré localement.")
-                    
-                    sujet_mail = f"[INSTRUMENTS/CHIFFREMENT] Point Hebdo - Station San Pedro"
-                    corps_mail = f"Bonjour,\nVeuillez trouver ci-joint le point hebdomadaire des instruments et chiffrement de la station de San Pedro.\nNotes de l'agent : {commentaires}"
-                    destins = ["alain.gnayoro@sodexam.ci"]
-                    if envoyer_email_sodexam(sujet_mail, corps_mail, destins, fichier_joint=fichier_word):
-                        st.success(f"✉️ Fichier '{fichier_word.name}' transmis avec succès à Alain Gnayoro.")
+                    st.success("💾 Rapport archivé localement avec succès.")
                 else:
-                    st.warning("Veuillez joindre le fichier Word avant de valider.")
+                    st.warning("Veuillez charger le fichier Word.")
 
     # --- SOUS-MENU 4 : AGROMET & CLIMAT ---
     elif choix_menu == "🌱 AGROMET & CLIMAT":
-        st.subheader("🌱 Rapports Décadaires AGROMET & Mensuels CLIMAT")
-        st.info("Rappels : AGROMET attendu les 1, 11, 21 avant 09h00. CLIMAT attendu au plus tard le 4 du mois.")
+        st.subheader("🌱 Saisie des Rapports Décadaires AGROMET & Mensuels CLIMAT")
         with st.form("form_agromet_climat"):
             type_clima = st.selectbox("Type de rapport :", ["AGROMET (Décadaire)", "CLIMAT (Mensuel)"])
-            heure_saisie = st.time_input("Heure réelle d'envoi :", maintenant.time())
+            heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
             corps_clima = st.text_area("Contenu textuel du message :", height=150)
             
             if st.form_submit_button("🚀 Transmettre le Rapport"):
                 jour = maintenant.day
                 statut = "Transmis dans le délai"
                 
+                # Sécurisation réglementaire des conditions temporelles (AGROMET décades 1, 11, 21 avant 09h00)
                 if type_clima == "AGROMET (Décadaire)":
-                    if (jour not in 1,11,21) or (heure_saisie.hour >= 9):
+                    if (jour not in) or (heure_trans.hour >= 9):
                         statut = "Transmis hors délai"
                 elif type_clima == "CLIMAT (Mensuel)" and jour > 4:
                     statut = "Transmis hors délai"
                     
                 df = pd.read_csv(FICHIER_BDD)
                 nouvelle_ligne = {
-                    "Date_Saisie": date_saisie, "Date_Donnees": date_saisie, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
-                    "Agent": agent_actif, "Categorie": "Agromet/Climat", "Type_Message_Fichier": type_clima, "Heure_Saisie": heure_saisie.strftime("%H:%M"),
+                    "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
+                    "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                    "Categorie": "Agromet/Climat", "Type_Message_Fichier": type_clima, "Heure_Transmission": heure_trans.strftime("%H:%M"),
                     "Statut_Delai": statut, "Details": corps_clima
                 }
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                st.success(f"💾 Rapport '{type_clima}' enregistré avec succès en local ! Statut : **{statut}**")
-                
-                sujet_mail = f"[{type_clima}] Rapport Station San Pedro - {date_saisie}"
-                destins = ["augustin.mian@sodexam.ci"]
-                if envoyer_email_sodexam(sujet_mail, corps_clima, destins):
-                    st.success("✉️ E-mail transmis avec succès à Augustin Mian.")
+                st.success(f"💾 Rapport '{type_clima}' enregistré ! Statut qualifié : **{statut}**")
 
     # --- SOUS-MENU 5 : TABLEAU CLIMATOLOGIQUE (TCM) ---
     elif choix_menu == "📂 Tableau Climatologique (TCM)":
-        st.subheader("📂 Expédition du Fichier Excel TCM Renseigné à Part")
-        st.markdown("Importez votre fichier Excel externe compilé pour l'envoyer à la fin de la décade.")
-        
+        st.subheader("📂 Suivi du Fichier Excel TCM Renseigné à Part")
         with st.form("form_tcm"):
             fichier_excel_tcm = st.file_uploader("Sélectionnez votre classeur Excel TCM :", type=["xlsx", "xls"])
-            
-            if st.form_submit_button("📨 Acheminer le fichier Excel TCM"):
+            if st.form_submit_button("📨 Valider le dépôt de dossier"):
                 if fichier_excel_tcm is not None:
                     df = pd.read_csv(FICHIER_BDD)
                     nouvelle_ligne = {
-                        "Date_Saisie": date_saisie, "Date_Donnees": date_saisie, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
-                        "Agent": agent_actif, "Categorie": "TCM", "Type_Message_Fichier": "Fichier Excel TCM", "Heure_Saisie": maintenant.strftime("%H:%M"),
-                        "Statut_Delai": "Transmis", "Details": f"Fichier TCM: {fichier_excel_tcm.name}"
+                        "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
+                        "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                        "Categorie": "TCM", "Type_Message_Fichier": "Fichier Excel TCM", "Heure_Transmission": heure_informatique,
+                        "Statut_Delai": "Transmis dans le délai", "Details": f"Fichier TCM: {fichier_excel_tcm.name}"
                     }
                     pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                    st.success(f"💾 Enregistrement local effectué de l'envoi du TCM.")
-                    
-                    sujet_mail = f"[TCM EXCEL] Expédition Décadaire/Mensuelle - San Pedro"
-                    corps_mail = f"Bonjour,\nVeuillez trouver ci-joint le classeur Excel du Tableau Climatologique Mensuel (TCM) de San Pedro."
-                    destins = ["juliette.assi@sodexam.ci"]
-                    if envoyer_email_sodexam(sujet_mail, corps_mail, destins, fichier_joint=fichier_excel_tcm):
-                        st.success(f"✉️ Classeur Excel '{fichier_excel_tcm.name}' transmis avec succès à Juliette Assi.")
+                    st.success(f"💾 Fichier Excel '{fichier_excel_tcm.name}' enregistré localement dans la base.")
                 else:
                     st.warning("Veuillez charger un fichier Excel valide.")
 
@@ -316,79 +240,59 @@ else:
                 df_p = pd.read_csv(FICHIER_AGENTS)
                 nouvelle_p = {"Date": date_saisie, "Agent": agent_actif, "Action": action, "Heure": heure_action.strftime("%H:%M")}
                 pd.concat([df_p, pd.DataFrame([nouvelle_p])], ignore_index=True).to_csv(FICHIER_AGENTS, index=False)
-                st.success(f"✅ Heure de {action} enregistrée avec succès pour {agent_actif} à {heure_action.strftime('%H:%M')}.")
+                st.success(f"✅ Présence enregistrée pour {agent_actif}.")
         
         st.markdown("### 📅 Registre des présences du jour")
         df_p_lecture = pd.read_csv(FICHIER_AGENTS)
         st.dataframe(df_p_lecture[df_p_lecture["Date"] == date_saisie], use_container_width=True)
 
-    # --- SOUS-MENU 7 : QUALITÉ & JUSTIFICATIONS HORS DÉLAI ---
+    # --- SOUS-MENU 7 : QUALITÉ & JUSTIFICATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":
-        st.subheader("📝 Cahier d'Observations, Qualité et Raisons des Hors Délais")
+        st.subheader("📝 Cahier d'Observations, Qualité et Raisons des Hors Délais / Manquants")
         with st.form("form_obs"):
-            type_obs = st.selectbox("Nature de l'observation :", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité du message / Erreur de chiffrement", "Panne d'instrument / Coupure Internet"])
-            msg_concerne = st.text_input("Message concerné (Ex: SYNOP 12h, METAR 07h30, etc.) :")
-            explications = st.text_area("Description détaillée des raisons / observations :")
+            type_obs = st.selectbox("Nature de l'observation :", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité / Erreur de chiffrement", "Panne d'instrument / Coupure Internet"])
+            msg_concerne = st.text_input("Message concerné (Ex: SYNOP 12h, METAR 07h30) :")
+            explications = st.text_area("Description détaillée des raisons :")
             
             if st.form_submit_button("🚀 Enregistrer l'observation"):
                 df_o = pd.read_csv(FICHIER_OBS)
                 nouvelle_o = {
-                    "Date": date_saisie, "Heure": maintenant.strftime("%H:%M"), "Agent": agent_actif,
+                    "Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif,
                     "Type_Observation": type_obs, "Message_Concerne": msg_concerne, "Raison_Retard_Ou_Qualite": explications
                 }
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
-                st.success("💾 Observation officiellement consignée dans le registre de la station.")
-                
-                sujet_mail = f"[OBSERVATION STATION] {type_obs} - San Pedro"
-                corps_mail = f"Date: {date_saisie}\nAgent: {agent_actif}\nType: {type_obs}\nConcerne: {msg_concerne}\nDétails: {explications}"
-                envoyer_email_sodexam(sujet_mail, corps_mail, ["service.prevision@sodexam.com", "alain.gnayoro@sodexam.ci"])
+                st.success("💾 Observation officiellement consignée dans le registre.")
         
         st.markdown("### 🗂️ Historique des observations de la station")
         st.dataframe(pd.read_csv(FICHIER_OBS), use_container_width=True)
 
-           # --- SOUS-MENU 8 : TABLEAU DE BORD & STATISTIQUES ---
+    # --- SOUS-MENU 8 : TABLEAU DE BORD & RENDEMENT ---
     elif choix_menu == "📈 Tableau de bord & Décomptes":
         st.subheader("📊 Tableau de Bord Réglementaire & Rendement des Transmissions")
         df_stats = pd.read_csv(FICHIER_BDD)
         
-        # --- FILTRES DE SÉLECTION EN HAUT ---
+        # FILTRES EN HAUT
         col_t1, col_t2, col_t3 = st.columns(3)
         with col_t1:
             periode_filtre = st.selectbox("⏳ Échelle temporelle à analyser :", ["Journalier (Aujourd'hui)", "Mensuel (Mois en cours)", "Annuel (Année en cours)"])
         with col_t2:
-            liste_types_dispos = ["Tous", "SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"]
-            type_msg_filtre = st.selectbox("📡 Filtrer par Type de Message :", liste_types_dispos)
+            type_msg_filtre = st.selectbox("📡 Filtrer par Type de Message :", ["Tous", "SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"])
         with col_t3:
-            # Récupération automatique de la date actuelle
-            maintenant_dt = datetime.now()
-            str_aujourdhui = maintenant_dt.strftime("%Y-%m-%d")
-            
-            mois_fr = {
-                "January": "January", "February": "February", "March": "March", "April": "April",
-                "May": "May", "June": "June", "July": "July", "August": "August",
-                "September": "September", "October": "October", "November": "November", "December": "December"
-            }
-            str_mois = mois_fr.get(maintenant_dt.strftime("%B"), maintenant_dt.strftime("%B"))
-            str_annee = maintenant_dt.strftime("%Y")
-            
-            st.markdown(f"<p style='margin-top:25px; font-weight:bold; color:#f97316;'>📅 Date : {str_aujourdhui}</p>", unsafe_allow_html=True)
+            str_annee = maintenant.strftime("%Y")
+            st.markdown(f"<p style='margin-top:25px; font-weight:bold; color:#f97316;'>📅 Date Saisie : {date_saisie} | Heure : {heure_informatique}</p>", unsafe_allow_html=True)
 
-        # --- LOGIQUE DE CALCUL DU FILTRE TEMPOREL ---
+        # LOGIQUE DE TRITEMENT ET DE FILTRAGE DES DONNÉES
         if not df_stats.empty:
-            # 1. Application du filtre de période
             if "Journalier" in periode_filtre:
-                df_temp = df_stats[df_stats["Date_Saisie"] == str_aujourdhui]
+                df_temp = df_stats[df_stats["Date_Saisie"] == date_saisie]
                 facteur_jours = 1
             elif "Mensuel" in periode_filtre:
-                df_temp = df_stats[(df_stats["Mois"] == str_mois) & (df_stats["Annee"] == str_annee)]
-                # Nombre de jours écoulés dans le mois pour un quota juste
-                facteur_jours = maintenant_dt.day
+                df_temp = df_stats[(df_stats["Mois"] == maintenant.strftime("%B")) & (df_stats["Annee"] == str_annee)]
+                facteur_jours = maintenant.day
             else:
                 df_temp = df_stats[df_stats["Annee"] == str_annee]
-                # Nombre de jours écoulés dans l'année
-                facteur_jours = maintenant_dt.timetuple().tm_yday
+                facteur_jours = maintenant.timetuple().tm_yday
                 
-            # 2. Application du filtre par type de message
             if type_msg_filtre != "Tous":
                 df_final = df_temp[df_temp["Type_Message_Fichier"] == type_msg_filtre]
             else:
@@ -397,85 +301,49 @@ else:
             df_final = pd.DataFrame()
             facteur_jours = 1
 
-        # --- CALCUL DES QUOTAS RÉGLEMENTAIRES ATTENDUS ---
-        # Définition des attendus par jour
-        quotas_par_jour = {
-            "SYNOP Horaire": 24,
-            "SYNOP Principal": 8,
-            "METAR": 14,
-            "METREPORT": 14,
-            "SPECI": 0 # Non soumis à quota fixe
-        }
+        # QUOTAS RÉGLEMENTAIRES SODEXAM
+        quotas_par_jour = {"SYNOP Horaire": 24, "SYNOP Principal": 8, "METAR": 14, "METREPORT": 14, "SPECI": 0}
         
         if type_msg_filtre != "Tous":
             attendus = quotas_par_jour.get(type_msg_filtre, 0) * facteur_jours
         else:
-            # Si "Tous", on fait la somme des quotas fixes configurés
             attendus = sum([quotas_par_jour["SYNOP Horaire"], quotas_par_jour["SYNOP Principal"], quotas_par_jour["METAR"], quotas_par_jour["METREPORT"]]) * facteur_jours
 
-               # Comptages réels sécurisés
         transmis = len(df_final)
+        dans_delai = len(df_final[df_final["Statut_Delai"] == "Transmis dans le délai"]) if not df_final.empty else 0
+        hors_delai = len(df_final[df_final["Statut_Delai"] == "Transmis hors délai"]) if not df_final.empty else 0
         
-        # Vérification de sécurité sur le nom de la colonne
-        colonne_delai = "Statut_Delai" if "Statut_Delai" in df_final.columns else ("Statut_Délai" if "Statut_Délai" in df_final.columns else None)
-        
-        if colonne_delai:
-            dans_delai = len(df_final[df_final[colonne_delai] == "Transmis dans le délai"])
-            hors_delai = len(df_final[df_final[colonne_delai] == "Transmis hors délai"])
-        else:
-            dans_delai = transmis  # Par défaut si la colonne est vide
-            hors_delai = 0
-        
-        # Calcul des messages manquants (non transmis)
         if type_msg_filtre == "SPECI":
-            non_transmis = 0 # Pas de notion de manquant pour les SPECI
+            non_transmis = 0
             taux_rendement = 100.0 if transmis > 0 else 0.0
         else:
             non_transmis = max(0, attendus - transmis)
             taux_rendement = (dans_delai / attendus) * 100 if attendus > 0 else 0.0
 
-        # --- AFFICHAGE DES CARTES DE RENDEMENT (KPI) ---
-        st.markdown(f"#### 📈 Indicateurs pour la période : **{periode_filtre}** | Message : **{type_msg_filtre}**")
-        
+        # AFFICHAGE DES VALEURS (KPI)
+        st.markdown(f"#### 📈 Indicateurs : **{periode_filtre}** | Message : **{type_msg_filtre}**")
         k1, k2, k3, k4, k5 = st.columns(5)
-        with k1:
-            st.markdown(f'<div class="kpi-box"><div class="kpi-title">📋 Attendus (Théorique)</div><div class="kpi-value">{attendus}</div></div>', unsafe_allow_html=True)
-        with k2:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #3b82f6;"><div class="kpi-title">📤 Transmis (Total)</div><div class="kpi-value">{transmis}</div></div>', unsafe_allow_html=True)
-        with k3:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #16a34a;"><div class="kpi-title">⏱️ Dans les Délais</div><div class="kpi-value">{dans_delai}</div></div>', unsafe_allow_html=True)
-        with k4:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #f97316;"><div class="kpi-title">⚠️ Hors Délais</div><div class="kpi-value">{hors_delai}</div></div>', unsafe_allow_html=True)
+        with k1: st.markdown(f'<div class="kpi-box"><div class="kpi-title">📋 Attendus</div><div class="kpi-value">{attendus}</div></div>', unsafe_allow_html=True)
+        with k2: st.markdown(f'<div class="kpi-box" style="border-top-color: #3b82f6;"><div class="kpi-title">📤 Transmis</div><div class="kpi-value">{transmis}</div></div>', unsafe_allow_html=True)
+        with k3: st.markdown(f'<div class="kpi-box" style="border-top-color: #16a34a;"><div class="kpi-title">⏱️ Dans les Délais</div><div class="kpi-value">{dans_delai}</div></div>', unsafe_allow_html=True)
+        with k4: st.markdown(f'<div class="kpi-box" style="border-top-color: #f97316;"><div class="kpi-title">⚠️ Hors Délais</div><div class="kpi-value">{hors_delai}</div></div>', unsafe_allow_html=True)
         with k5:
-            # Alerte rouge si des messages réglementaires sont manquants
             couleur_manquant = "#ef4444" if non_transmis > 0 else "#6b7280"
             st.markdown(f'<div class="kpi-box" style="border-top-color: {couleur_manquant};"><div class="kpi-title">❌ Non Transmis</div><div class="kpi-value">{non_transmis}</div></div>', unsafe_allow_html=True)
 
-        # Affichage du Taux de Performance Global en grand juste en dessous
         st.markdown("<br>", unsafe_allow_html=True)
         couleur_rendement = "#16a34a" if taux_rendement >= 85 else ("#f97316" if taux_rendement >= 50 else "#ef4444")
         st.markdown(f"""
             <div style='background-color: #f9fafb; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e5e7eb; border-left: 6px solid {couleur_rendement};'>
-                <p style='margin:0; font-size:14px; text-transform:uppercase; font-weight:bold; color:#6b7280;'>🎯 Taux de Rendement Réglementaire (Efficacité dans les Délais)</p>
+                <p style='margin:0; font-size:14px; text-transform:uppercase; font-weight:bold; color:#6b7280;'>🎯 Taux de Rendement Réglementaire Global</p>
                 <p style='margin:5px 0 0 0; font-size:36px; font-weight:bold; color:{couleur_rendement};'>{taux_rendement:.1f} %</p>
-                <small style='color:#9ca3af;'>Formule de calcul : (Messages Transmis dans les Délais / Messages Attendus Obligatoires) × 100</small>
+                <small style='color:#9ca3af;'>Formule : (Transmis dans les Délais / Attendus Réglementaires) × 100</small>
             </div>
         """, unsafe_allow_html=True)
 
         st.markdown("---")
-
-        # --- RENDER DES HISTORIQUES ET DES DONNÉES FILTRÉES ---
         if not df_final.empty:
-            st.markdown("### 🗂️ Liste des messages correspondants au tri")
-            st.dataframe(df_final[["Date_Saisie", "Heure_Saisie", "Agent", "Type_Message_Fichier", "Statut_Delai", "Details"]], use_container_width=True)
-            
-            st.markdown("### 📊 Ventilation Statistique Complète")
-            col_chart1, col_chart2 = st.columns(2)
-            with col_chart1:
-                st.markdown("**Répartition par Statut de Délai**")
-                st.bar_chart(df_final['Statut_Delai'].value_counts())
-            with col_chart2:
-                st.markdown("**Activité d'envoi par Agent**")
-                st.bar_chart(df_final['Agent'].value_counts())
+            st.markdown("### 🗂️ Tableau récapitulatif complet de l'activité (Tri temporel appliqué)")
+            st.dataframe(df_final[["Date_Saisie", "Heure_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
         else:
-            st.info("ℹ️ Aucun message enregistré ne correspond à ce filtre pour la période sélectionnée.")
+            st.info("ℹ️ Aucun message enregistré ne correspond à ce filtre pour le moment.")

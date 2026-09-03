@@ -156,7 +156,6 @@ else:
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
         # --- SOUS-MENU 1 : SYNOP & METAR ---
-    if c    # --- SOUS-MENU 1 : SYNOP & METAR ---
     if choix_menu == "📡 SYNOP & METAR":
         st.subheader("📡 Saisie des Messages Réguliers (SYNOP / METAR)")
         if agent_bloque:

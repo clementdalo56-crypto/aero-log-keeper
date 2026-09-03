@@ -182,8 +182,7 @@ else:
                     "Date_Saisie": date_saisie, "Date_Donnees": date_donnees, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
                     "Agent": agent_actif, "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Saisie": heure_saisie.strftime("%H:%M"),
                     "Statut_Delai": statut, "Details": contenu_texte
-
-                }
+                    
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                 st.success(f"💾 Données du {date_donnees} enregistrées en local ! Statut : **{statut}**")
                 

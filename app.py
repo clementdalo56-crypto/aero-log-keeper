@@ -15,16 +15,16 @@ st.markdown("""
     <style>
    st.markdown("""
     <style>
-    /* 1. FOND VERT NATIONAL UNIQUEMENT SUR LES ÉLÉMENTS EXTÉRIEURS */
+    /* 1. FOND VERT NATIONAL SUR LES ÉLÉMENTS EXTÉRIEURS */
     .stApp { 
-        background-color: #134e4a !important; /* Vert foncé pour l'harmonie avec la sidebar */
+        background-color: #134e4a !important; 
         color: #1f2937 !important; 
         z-index: 1 !important;
     }
     
-    /* MODIFICATION DE LA GRANDE ZONE CENTRALE (Rectangle rouge) EN ORANGE CLAIR */
+    /* GRANDE ZONE CENTRALE EN ORANGE CLAIR */
     [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"] {
-        background-color: #fff7ed !important; /* Orange très clair / Crème sur toute la zone centrale */
+        background-color: #fff7ed !important; 
     }
     .main .block-container {
         background-color: #fff7ed !important;
@@ -32,19 +32,18 @@ st.markdown("""
         padding-bottom: 40px !important;
     }
     
-    /* 2. LE FORMULAIRE BLANC ÉPURÉ POUR RESSORTIR SUR L'ORANGE CLAIR */
+    /* 2. LE FORMULAIRE BLANC ÉPURÉ */
     [data-testid="stForm"] { 
         max-width: 850px !important; 
         margin: 0 auto !important; 
         padding: 30px !important; 
-        background-color: #ffffff !important; /* Formulaire en blanc pur pour une clarté totale */
+        background-color: #ffffff !important; 
         border-radius: 15px !important;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
         border: 2px solid #ffedd5 !important;
     }
-
     
-    /* Ajustement des listes déroulantes et champs de temps pour rester centrés */
+    /* Ajustement des listes déroulantes et champs de temps */
     div[data-testid="stSelectbox"], div[data-testid="stTimeInput"] {
         max-width: 750px !important;
         margin: 0 auto 15px auto !important;
@@ -53,7 +52,7 @@ st.markdown("""
     /* Zones de saisie de texte et de chiffres */
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
         color: #111827 !important; 
-        background-color: #ffffff !important; /* Fond blanc pur dans les cases pour une lisibilité totale */
+        background-color: #ffffff !important; 
         border: 2px solid #cbd5e1 !important;
     }
     
@@ -62,25 +61,25 @@ st.markdown("""
         color: #111827 !important; background-color: #ffffff !important; font-weight: bold !important;
     }
     
-    /* Écritures textuelles au centre (Police Cambria en Noir Foncé) */
+    /* Écritures textuelles au centre (Police Cambria en Noir Fonced) */
     div[data-testid="stMarkdownContainer"] p, label p, .stSubheader p {
         color: #111827 !important; 
         font-family: 'Cambria', serif !important;
         font-weight: 500 !important;
     }
     
-    /* 3. DESIGN DE LA BARRE LATÉRALE (Sidebar également en Vert doux pour l'harmonie) */
+    /* 3. DESIGN DE LA BARRE LATÉRALE (Vert foncé) */
     [data-testid="stSidebar"] { 
-        background-color: #134e4a !important; /* Vert plus foncé pour la barre latérale */
-        border-right: 4px solid #f97316 !important; /* Ligne de séparation Orange vif */
+        background-color: #134e4a !important; 
+        border-right: 4px solid #f97316 !important; 
     }
     
-    /* Textes des sous-menus (Police Cambria en Blanc Éclatant pour ressortir sur le vert) */
+    /* Textes des sous-menus (Police Cambria en Blanc Éclatant) */
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
         font-family: 'Cambria', serif !important; 
         font-size: 14px !important; 
         font-weight: bold !important; 
-        color: #ffffff !important; /* ÉCRITURE BLANCHE SUR FOND VERT */
+        color: #ffffff !important; 
     }
     /* Titres en haut de la barre latérale */
     [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p {
@@ -88,7 +87,7 @@ st.markdown("""
     }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
     
-    /* 4. DESIGN DES BOUTONS DE VALIDATION (Orange Vif National) */
+    /* 4. DESIGN DES BOUTONS DE VALIDATION (Orange Vif) */
     div.stButton > button { 
         background-color: #f97316 !important; 
         border-radius: 8px !important; 
@@ -112,6 +111,7 @@ st.markdown("""
     .kpi-value { color: #111827; font-size: 24px; font-weight: bold; margin-top: 5px; }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 

@@ -13,13 +13,25 @@ st.set_page_config(page_title="SODEXAM - Station de San Pedro", layout="wide", i
 
 st.markdown("""
     <style>
-    .stApp { background-color: #0e1117; }
+    /* Fond de l'application */
+    .stApp { background-color: #0b0f19; }
+    
+    /* Style haut de gamme pour les cartes de statistiques (KPI) */
     .kpi-box {
-        background-color: #1f2937; padding: 20px; border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3); text-align: center; border-left: 5px solid #3b82f6;
+        background: linear-gradient(145deg, #1e293b, #0f172a);
+        padding: 24px;
+        border-radius: 15px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        border: 1px solid #334155;
+        border-top: 4px solid #3b82f6; /* Ligne bleue supérieure */
+        transition: transform 0.2s;
     }
-    .kpi-title { color: #9ca3af; font-size: 14px; text-transform: uppercase; font-weight: bold; }
-    .kpi-value { color: #ffffff; font-size: 28px; font-weight: bold; margin-top: 5px; }
+    .kpi-box:hover {
+        transform: translateY(-5px); /* La carte se soulève légèrement au survol */
+    }
+    .kpi-title { color: #94a3b8; font-size: 13px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+    .kpi-value { color: #ffffff; font-size: 32px; font-weight: 800; margin-top: 8px; }
     </style>
 """, unsafe_allow_html=True)
 

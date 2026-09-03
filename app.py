@@ -242,7 +242,7 @@ else:
                 statut = "Transmis dans le délai"
                 
                 if type_clima == "AGROMET (Décadaire)":
-                    if (jour not in) or (heure_saisie.hour >= 9):
+                    if (jour not in 1,11,21) or (heure_saisie.hour >= 9):
                         statut = "Transmis hors délai"
                 elif type_clima == "CLIMAT (Mensuel)" and jour > 4:
                     statut = "Transmis hors délai"

@@ -51,7 +51,7 @@ FICHIER_OBS = "observations_qualite_sanpedro.csv"
 SMTP_SERVEUR = "://office365.com"  
 SMTP_PORT = 587
 COMPTE_MAIL_STATION = "meteo.sanpedro@sodexam.ci" 
-COMPTE_MOT_DE_PASSE = "VotreMotDePasseOutlookIci"  
+COMPTE_MOT_DE_PASSE = "Sp2022met"  
 
 def transmettre_message_outlook(sujet, corps, destinataires, fichier_joint=None):
     tous_les_destinataires = list(set(destinataires + ["meteo.sanpedro@sodexam.ci"]))

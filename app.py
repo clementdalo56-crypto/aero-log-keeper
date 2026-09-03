@@ -413,10 +413,18 @@ else:
             # Si "Tous", on fait la somme des quotas fixes configurés
             attendus = sum([quotas_par_jour["SYNOP Horaire"], quotas_par_jour["SYNOP Principal"], quotas_par_jour["METAR"], quotas_par_jour["METREPORT"]]) * facteur_jours
 
-        # Comptages réels
+               # Comptages réels sécurisés
         transmis = len(df_final)
-        dans_delai = len(df_final[df_final["Statut_Delai"] == "Transmis dans le délai"])
-        hors_delai = len(df_final[df_final["Statut_Delai"] == "Transmis hors délai"])
+        
+        # Vérification de sécurité sur le nom de la colonne
+        colonne_delai = "Statut_Delai" if "Statut_Delai" in df_final.columns else ("Statut_Délai" if "Statut_Délai" in df_final.columns else None)
+        
+        if colonne_delai:
+            dans_delai = len(df_final[df_final[colonne_delai] == "Transmis dans le délai"])
+            hors_delai = len(df_final[df_final[colonne_delai] == "Transmis hors délai"])
+        else:
+            dans_delai = transmis  # Par défaut si la colonne est vide
+            hors_delai = 0
         
         # Calcul des messages manquants (non transmis)
         if type_msg_filtre == "SPECI":

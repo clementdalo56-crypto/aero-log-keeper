@@ -178,7 +178,7 @@ else:
                 
                 df = pd.read_csv(FICHIER_BDD)
                 contenu_texte = f"Données du {date_donnees} | TMAX: {t_max}°C | TMIN: {t_min}°C | Pluie: {pluie}mm"
-                nouvelle_ligne = 
+                nouvelle_ligne  
                     "Date_Saisie": date_saisie, "Date_Donnees": date_donnees, "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"),
                     "Agent": agent_actif, "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Saisie": heure_saisie.strftime("%H:%M"),
                     "Statut_Delai": statut, "Details": contenu_texte

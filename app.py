@@ -13,23 +13,36 @@ st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", ini
 
 st.markdown("""
     <style>
-    /* 1. FOND VERT NATIONAL SUR LES CÔTÉS DE L'APPLICATION */
+   st.markdown("""
+    <style>
+    /* 1. FOND VERT NATIONAL UNIQUEMENT SUR LES ÉLÉMENTS EXTÉRIEURS */
     .stApp { 
-        background-color: #115e59 !important; /* Beau Vert émeraude institutionnel pour les côtés */
+        background-color: #134e4a !important; /* Vert foncé pour l'harmonie avec la sidebar */
         color: #1f2937 !important; 
         z-index: 1 !important;
     }
     
-    /* 2. INTERFACE CENTRALE EN ORANGE CLAIR (Zone des Formulaires) */
+    /* MODIFICATION DE LA GRANDE ZONE CENTRALE (Rectangle rouge) EN ORANGE CLAIR */
+    [data-testid="stHeader"], [data-testid="stAppViewBlockContainer"] {
+        background-color: #fff7ed !important; /* Orange très clair / Crème sur toute la zone centrale */
+    }
+    .main .block-container {
+        background-color: #fff7ed !important;
+        padding-top: 40px !important;
+        padding-bottom: 40px !important;
+    }
+    
+    /* 2. LE FORMULAIRE BLANC ÉPURÉ POUR RESSORTIR SUR L'ORANGE CLAIR */
     [data-testid="stForm"] { 
         max-width: 850px !important; 
-        margin: 30px auto !important; 
+        margin: 0 auto !important; 
         padding: 30px !important; 
-        background-color: #fff7ed !important; /* Orange très clair / couleur crème chaleureuse */
+        background-color: #ffffff !important; /* Formulaire en blanc pur pour une clarté totale */
         border-radius: 15px !important;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
         border: 2px solid #ffedd5 !important;
     }
+
     
     /* Ajustement des listes déroulantes et champs de temps pour rester centrés */
     div[data-testid="stSelectbox"], div[data-testid="stTimeInput"] {

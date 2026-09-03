@@ -47,16 +47,24 @@ st.markdown("""
     }
     
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
-        color: #111827 !important; background-color: #ffffff !important; border: 2px solid #cbd5e1 !important;
+        color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #cbd5e1 !important;
     }
     
     div[data-testid="stTimeInput"] input {
-        color: #111827 !important; background-color: #ffffff !important; font-weight: bold !important;
+        color: #111827 !important; background-color: #f3f4f6 !important; font-weight: bold !important;
     }
     
+    /* MODIFICATION : ÉCRITURES CENTRALES EN JAUNE GRAS ÉCLATANT */
     div[data-testid="stMarkdownContainer"] p, label p, .stSubheader p {
-        color: #111827 !important; font-family: 'Cambria', serif !important; font-weight: 500 !important;
+        color: #eab308 !important; /* Jaune Or vif */
+        font-family: 'Cambria', serif !important;
+        font-weight: bold !important;
+        font-size: 15px !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important; /* Ombre pour lisibilité maximale */
     }
+    
+    /* Garder les titres principaux en noir/sombre pour l'équilibre */
+    h1, h2, h3, h4, h5, h6 { color: #111827 !important; font-family: 'Cambria', serif !important; font-weight: bold !important; }
     
     /* 3. DESIGN DE LA BARRE LATÉRALE (Vert foncé) */
     [data-testid="stSidebar"] { background-color: #134e4a !important; border-right: 4px solid #f97316 !important; }
@@ -66,14 +74,14 @@ st.markdown("""
     [data-testid="stSidebar"] h2, [data-testid="stSidebar"] p { color: #ffffff !important; }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
     
-    /* 4. DESIGN DES BOUTONS DE VALIDATION */
+    /* 4. DESIGN DES BOUTONS DE VALIDATION (Orange) */
     div.stButton > button { background-color: #f97316 !important; border-radius: 8px !important; border: none !important; padding: 12px 30px !important; }
-    div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 15px !important; }
+    div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 15px !important; text-shadow: none !important; }
     div.stButton > button:hover { background-color: #ea580c !important; }
     
     div[data-testid="stNotification"] { background-color: #f0fdf4 !important; border-left: 5px solid #16a34a !important; }
     .stAlert { background-color: #ffedd5 !important; border-left: 5px solid #f97316 !important; }
-    .stAlert p, .stAlert div, [data-testid="stNotification"] p { color: #1a1a1a !important; font-weight: 600 !important; font-size: 14px !important; }
+    .stAlert p, .stAlert div, [data-testid="stNotification"] p { color: #1a1a1a !important; font-weight: 600 !important; font-size: 14px !important; text-shadow: none !important; }
     
     .kpi-box {
         background-color: #ffffff; padding: 15px; border-radius: 10px;
@@ -91,7 +99,7 @@ FICHIER_BDD = "donnees_meteo_sanpedro.csv"
 FICHIER_AGENTS = "presence_agents_sanpedro.csv"
 FICHIER_OBS = "observations_qualite_sanpedro.csv"
 
-# 🎛️ CONF TRANSMISSIONS AUTOMATIQUES OUTLOOK
+# 🎛️ CONFIGURATION SERVEUR OUTLOOK
 SMTP_SERVEUR = "://office365.com"  
 SMTP_PORT = 587
 COMPTE_MAIL_STATION = "meteo.sanpedro@sodexam.ci" 
@@ -147,10 +155,10 @@ maintenant = datetime.now()
 minute_actuelle = maintenant.minute
 
 if 50 <= minute_actuelle <= 59 or minute_actuelle == 0:
-    st.markdown(f"### 🔔 RAPPEL RÉGLEMENTAIRE : Il est {maintenant.strftime('%H:%M')}. Fenêtre d'observation active !")
+    st.warning(f"⚠️ RAPPEL DE SERVICE : Il est {maintenant.strftime('%H:%M')}. La fenêtre de saisie réglementaire est active !")
     st.markdown("""<audio autoplay><source src="https://mixkit.co" type="audio/mpeg"></audio>""", unsafe_allow_html=True)
 
-# --- SÉCURITÉ ---
+# --- SÉCURITÉ ACCÈS ---
 if "authentifie" not in st.session_state: st.session_state["authentifie"] = False
 
 if not st.session_state["authentifie"]:
@@ -167,19 +175,25 @@ if not st.session_state["authentifie"]:
                 st.rerun()
             else: st.error("❌ Mot de passe incorrect")
 else:
-    # --- MENUS ---
+    # --- MENUS LATÉRAUX AVEC PRESENCE EN PREMIÈRE LIGNE ---
     st.sidebar.markdown("<h2 style='color:#f97316; margin-bottom:0;'>🏢 SODEXAM</h2><p style='color:#16a34a; font-weight:bold; margin-top:0;'>Station de San Pedro</p>", unsafe_allow_html=True)
     liste_agents = ["Dalo Clement", "Dao lea", "Adoh Bouet", "Koffi Gisele", "Djagba Aka", "Ote Armande"]
     agent_actif = st.sidebar.selectbox("👨‍💼 Agent de service :", liste_agents)
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("<p style='font-weight:bold; color:#f97316; font-size:13px;'>🗂️ MENUS DE LA STATION</p>", unsafe_allow_html=True)
+    
+    # MODIFICATION : Prise & Fin de service déplacée en premier choix
     choix_menu = st.sidebar.radio(
         "Sélectionnez votre tâche :",
         [
-            "📡 Saisie des Messages Réguliers", "🌡️ Données Extrêmes", "🛠️ Point Instrument & Correction",
-            "🌱 AGROMET & CLIMAT", "📂 Tableau Climatologique (TCM)",
-            "⏰ Prise & Fin de Service", "📝 Qualité & Justifications Hors Délai",
+            "⏰ Prise & Fin de Service",
+            "📡 Saisie des Messages Réguliers", 
+            "🌡️ Données Extrêmes", 
+            "🛠️ Point Instrument & Correction",
+            "🌱 AGROMET & CLIMAT", 
+            "📂 Tableau Climatologique (TCM)",
+            "📝 Qualité & Justifications Hors Délai",
             "📈 Tableau de bord & Décomptes"
         ]
     )
@@ -188,18 +202,38 @@ else:
     heure_informatique = maintenant.strftime("%H:%M")
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
-    if choix_menu == "📡 Saisie des Messages Réguliers":
+    # --- SOUS-MENU 1 : PRISE & FIN DE SERVICE (MAINTENANT EN PREMIER) ---
+    if choix_menu == "⏰ Prise & Fin de Service":
+        st.subheader("⏰ Registre de Présence (Montée / Descente)")
+        with st.form("form_presence"):
+            action = st.radio("Action :", ["Prise de service (Montée)", "Fin de service (Descente)"])
+            heure_action = st.time_input("Heure officielle de l'action :", maintenant.time())
+            if st.form_submit_button("💾 Valider l'Heure"):
+                df_p = pd.read_csv(FICHIER_AGENTS)
+                deja_signe = df_p[(df_p["Date"] == date_saisie) & (df_p["Agent"] == agent_actif) & (df_p["Action"] == action)]
+                if not deja_signe.empty: st.error(f"❌ Action refusée : Déjà enregistré aujourd'hui.")
+                else:
+                    nouvelle_p = {"Date": date_saisie, "Agent": agent_actif, "Action": action, "Heure": heure_action.strftime("%H:%M")}
+                    pd.concat([df_p, pd.DataFrame([nouvelle_p])], ignore_index=True).to_csv(FICHIER_AGENTS, index=False)
+                    st.success(f"✅ Présence enregistrée pour {agent_actif} ({action}).")
+        
+        st.markdown("### 📅 Emargements du jour")
+        df_p_l = pd.read_csv(FICHIER_AGENTS)
+        st.dataframe(df_p_l[df_p_l["Date"] == date_saisie], use_container_width=True)
+
+    # --- SOUS-MENU 2 : SAISIE DES MESSAGES RÉGULIERS ---
+    elif choix_menu == "📡 Saisie des Messages Réguliers":
         st.subheader("📡 Saisie des Messages Réguliers")
-        if agent_bloque: st.error(f"🛑 Accès refusé : L'agent **{agent_actif}** a déjà enregistré sa fin de service pour aujourd'hui.")
+        if agent_bloque: st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** is noté en fin de service.")
         else:
             with st.form("form_synop_metar"):
                 type_msg = st.selectbox("Type de message :", ["SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"])
                 heures_observations = [f"{h:02d}:00" for h in range(24)]
                 heure_nominale_str = st.selectbox("🕒 Heure officielle de l'observation (H UTC) :", heures_observations, index=maintenant.hour)
-                heure_trans = st.time_input("⏱️ Heure réelle de transmission du message (Saisie Manuelle Agent) :", maintenant.time())
+                heure_trans = st.time_input("⏱️ Heure réelle de transmission (Outlook) :", maintenant.time())
                 corps_msg = st.text_area("Texte réglementaire du message :", height=150)
                 
-                if st.form_submit_button("🚀 Valider, Archiver et Transmettre"):
+                if st.form_submit_button("🚀 Valider et Archiver le Message"):
                     heure_definitive_str = heure_trans.strftime("%H:%M")
                     if type_msg != "SPECI" and verifier_doublon_message(type_msg, date_saisie, heure_definitive_str):
                         st.error(f"❌ Doublon interdit : Un message {type_msg} existe déjà à cette heure.")
@@ -218,10 +252,10 @@ else:
                             "Statut_Delai": statut, "Details": f"[Obs: {heure_nominale_str}] {corps_msg}"
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success(f"💾 Message enregistré ! Heure : **{heure_definitive_str}** | Statut : **{statut}**")
+                        st.success(f"💾 Message enregistré ! Heure mémorisée : **{heure_definitive_str}** | Statut : **{statut}**")
                         transmettre_message_outlook(f"[{type_msg}] San Pedro", corps_msg, ["beta@sodexam.ci"])
 
-    # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
+    # --- SOUS-MENU 3 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
         st.subheader("🌡️ Saisie des Données Extrêmes")
         if agent_bloque: st.error("🛑 Saisie bloquée : Vous avez déjà signé votre fin de service.")
@@ -248,8 +282,9 @@ else:
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                         st.success(f"💾 Enregistré localement ! Statut : **{statut}**")
+                        transmettre_message_outlook(f"[DONNEES EXTREMES] San Pedro - {date_donnees}", contenu_texte, ["service.prevision@sodexam.com"])
 
-    # --- SOUS-MENU 3 : POINT INSTRUMENT ---
+    # --- SOUS-MENU 4 : POINT INSTRUMENT ---
     elif choix_menu == "🛠️ Point Instrument & Correction":
         st.subheader("🛠️ Point Hebdomadaire des Instruments")
         if agent_bloque: st.error("🛑 Action impossible en fin de service.")
@@ -268,8 +303,92 @@ else:
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                         st.success("💾 Rapport archivé localement.")
+                        transmettre_message_outlook("[INSTRUMENTS] Point Hebdo - San Pedro", commentaires, ["alain.gnayoro@sodexam.ci"], fichier_joint=fichier_word)
+                    else: st.warning("Veuillez charger le fichier Word.")
 
-    # --- SOUS-MENU 4 : AGROMET & CLIMAT ---
+    # --- SOUS-MENU 5 : AGROMET & CLIMAT ---
+    elif choix_menu == "🌱 AGROMET & CLIMAT":
+        st.subheader("🌱 Rapports Décadaires AGROMET & Mensuels CLIMAT")
+        if agent_bloque: st.error("🛑 Saisie bloquée en fin de service.")
+        else:
+            with st.form("form_agromet_climat"):
+                type_clima = st.selectbox("Type de rapport :", ["AGROMET (Décadaire)", "CLIMAT (Mensuel)"])
+                heure_trans = st.time_input("⏱️ Heure réelle de transmission :", maintenant.time())
+                corps_clima = st.text_area("Contenu du message :", height=150)
+                if st.form_submit_button("🚀 Transmettre le Rapport"):
+                    heure_str = heure_trans.strftime("%H:%M")
+                    if verifier_doublon_message(type_clima, date_saisie, heure_str): st.error("❌ Doublon détecté.")
+                    else:
+                        jour = maintenant.day
+                        statut = "Transmis dans le délai"
+                        if type_clima == "AGROMET (Décadaire)" and (heure_trans.hour >= 9): statut = "Transmis hors délai"
+                        elif type_clima == "CLIMAT (Mensuel)" and jour > 4: statut = "Transmis hors délai"
+                        df = pd.read_csv(FICHIER_BDD)
+                        nouvelle_ligne = {
+                            "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
+                            "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                            "Categorie": "SYNOP & METAR", 
+                            "Type_Message_Fichier": type_msg, 
+                            "Heure_Transmission": heure_definitive_str, 
+                            "Statut_Delai": statut, 
+                            "Details": f"[Obs: {heure_nominale_str}] {corps_msg}"
+                        }
+                        pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
+                        st.success(f"💾 Message enregistré ! Heure mémorisée : **{heure_definitive_str}** | Statut : **{statut}**")
+                        transmettre_message_outlook(f"[{type_msg}] San Pedro", corps_msg, ["beta@sodexam.ci"])
+
+    # --- SOUS-MENU 3 : DONNÉES EXTRÊMES ---
+    elif choix_menu == "🌡️ Données Extrêmes":
+        st.subheader("🌡️ Saisie des Données Extrêmes")
+        if agent_bloque: st.error("🛑 Saisie bloquée : Vous avez déjà signé votre fin de service.")
+        else:
+            with st.form("form_extremes"):
+                heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
+                t_max = st.number_input("Température Maximale (T MAXI) en °C :", value=28.0, step=0.1)
+                t_min = st.number_input("Température Minimale (T MINI) en °C :", value=22.0, step=0.1)
+                pluie = st.number_input("Quantité de pluie (P) en mm :", value=0.0, step=0.1)
+                if st.form_submit_button("🚀 Enregistrer les Extrêmes"):
+                    date_donnees = (maintenant - timedelta(days=1)).strftime("%Y-%m-%d")
+                    heure_str = heure_trans.strftime("%H:%M")
+                    if verifier_doublon_message("DONNEES EXTREMES", date_donnees, heure_str):
+                        st.error("❌ Erreur : Données déjà enregistrées pour cette journée.")
+                    else:
+                        statut = "Transmis dans le délai" if (6 <= heure_trans.hour < 8) or (heure_trans.hour == 8 and heure_trans.minute == 0) else "Transmis hors délai"
+                        df = pd.read_csv(FICHIER_BDD)
+                        contenu_texte = f"Données du {date_donnees} | TMAX: {t_max}°C | TMIN: {t_min}°C | Pluie: {pluie}mm"
+                        nouvelle_ligne = {
+                            "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_donnees,
+                            "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                            "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Transmission": heure_str,
+                            "Statut_Delai": statut, "Details": contenu_texte
+                        }
+                        pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
+                        st.success(f"💾 Enregistré localement ! Statut : **{statut}**")
+                        transmettre_message_outlook(f"[DONNEES EXTREMES] San Pedro - {date_donnees}", contenu_texte, ["service.prevision@sodexam.com"])
+
+    # --- SOUS-MENU 4 : POINT INSTRUMENT ---
+    elif choix_menu == "🛠️ Point Instrument & Correction":
+        st.subheader("🛠️ Point Hebdomadaire des Instruments")
+        if agent_bloque: st.error("🛑 Action impossible en fin de service.")
+        else:
+            with st.form("form_instruments"):
+                fichier_word = st.file_uploader("Téléverser le rapport (Fichier Word) :", type=["docx", "doc"])
+                commentaires = st.text_area("Notes des corrections de messages :")
+                if st.form_submit_button("🚀 Enregistrer le Rapport"):
+                    if fichier_word is not None:
+                        df = pd.read_csv(FICHIER_BDD)
+                        nouvelle_ligne = {
+                            "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
+                            "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                            "Categorie": "Instruments", "Type_Message_Fichier": "Rapport WORD", "Heure_Transmission": heure_informatique,
+                            "Statut_Delai": "Transmis dans le délai", "Details": f"Fichier: {fichier_word.name} | Notes: {commentaires}"
+                        }
+                        pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
+                        st.success("💾 Rapport archivé localement.")
+                        transmettre_message_outlook("[INSTRUMENTS] Point Hebdo - San Pedro", commentaires, ["alain.gnayoro@sodexam.ci"], fichier_joint=fichier_word)
+                    else: st.warning("Veuillez charger le fichier Word.")
+
+    # --- SOUS-MENU 5 : AGROMET & CLIMAT ---
     elif choix_menu == "🌱 AGROMET & CLIMAT":
         st.subheader("🌱 Rapports Décadaires AGROMET & Mensuels CLIMAT")
         if agent_bloque: st.error("🛑 Saisie bloquée en fin de service.")
@@ -295,8 +414,9 @@ else:
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                         st.success(f"💾 Rapport enregistré ! Statut : **{statut}**")
+                        transmettre_message_outlook(f"[{type_clima}] San Pedro", corps_clima, ["augustin.mian@sodexam.ci"])
 
-    # --- SOUS-MENU 5 : TABLEAU CLIMATOLOGIQUE ---
+    # --- SOUS-MENU 6 : TABLEAU CLIMATOLOGIQUE ---
     elif choix_menu == "📂 Tableau Climatologique (TCM)":
         st.subheader("📂 Fichier Excel TCM")
         if agent_bloque: st.error("🛑 Dépôt bloqué en fin de service.")
@@ -314,21 +434,7 @@ else:
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                         st.success("💾 Fichier enregistré localement.")
-
-    # --- SOUS-MENU 6 : PRESENCE ---
-    elif choix_menu == "⏰ Prise & Fin de Service":
-        st.subheader("⏰ Registre de Présence")
-        with st.form("form_presence"):
-            action = st.radio("Action :", ["Prise de service (Montée)", "Fin de service (Descente)"])
-            heure_action = st.time_input("Heure officielle :", maintenant.time())
-            if st.form_submit_button("💾 Valider"):
-                df_p = pd.read_csv(FICHIER_AGENTS)
-                deja_signe = df_p[(df_p["Date"] == date_saisie) & (df_p["Agent"] == agent_actif) & (df_p["Action"] == action)]
-                if not deja_signe.empty: st.error(f"❌ Déjà enregistré aujourd'hui.")
-                else:
-                    nouvelle_p = {"Date": date_saisie, "Agent": agent_actif, "Action": action, "Heure": heure_action.strftime("%H:%M")}
-                    pd.concat([df_p, pd.DataFrame([nouvelle_p])], ignore_index=True).to_csv(FICHIER_AGENTS, index=False)
-                    st.success(f"✅ Validé pour {agent_actif} ({action}).")
+                        transmettre_message_outlook("[TCM EXCEL] San Pedro", "Ci-joint le fichier Excel.", ["juliette.assi@sodexam.ci"], fichier_joint=fichier_excel_tcm)
 
     # --- SOUS-MENU 7 : CAHIER D'OBSERVATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":
@@ -337,18 +443,17 @@ else:
             type_obs = st.selectbox("Nature :", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité", "Panne / Coupure Internet"])
             msg_concerne = st.text_input("Message concerné (Ex: SYNOP 12h) :")
             explications = st.text_area("Explications détaillées :")
-            if st.form_submit_button("🚀 Enregistrer"):
+            if st.form_submit_button("🚀 Enregistrer l'Observation"):
                 df_o = pd.read_csv(FICHIER_OBS)
                 nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": type_obs, "Message_Concerne": msg_concerne, "Raison_Retard_Ou_Qualite": explications}
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
                 st.success("💾 Observation consignée dans le registre.")
 
-    # --- SOUS-MENU 8 : TABLEAU DE BORD, HISTORIQUES ET CLASSEMENT AGENTS ---
+    # --- SOUS-MENU 8 : TABLEAU DE BORD & STATISTIQUES ---
     elif choix_menu == "📈 Tableau de bord & Décomptes":
         st.subheader("📊 Rendement, Historique Temporel Total et Classement")
         df_stats = pd.read_csv(FICHIER_BDD)
         
-        # --- FILTRES CORRIGÉS SÉCURISÉS ---
         col_t1, col_t2, col_t3 = st.columns(3)
         with col_t1:
             if not df_stats.empty:
@@ -411,6 +516,18 @@ else:
                 df_final['ID'] = df_final.index
                 st.dataframe(df_final[["ID", "Date_Saisie", "Heure_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
                 
+                # --- GRAPHIQUES HISTORIQUES LIÉS AU TRI ---
+                st.markdown("---")
+                st.markdown("### 📊 Graphiques d'Activité sur le tri sélectionné")
+                col_chart1, col_chart2 = st.columns(2)
+                with col_chart1:
+                    st.markdown("**Volumes d'activité par type de message / fichier**")
+                    st.bar_chart(df_final['Type_Message_Fichier'].value_counts())
+                with col_chart2:
+                    st.markdown("**Répartition de la ponctualité (Délais de livraison)**")
+                    st.bar_chart(df_final['Statut_Delai'].value_counts())
+                st.markdown("---")
+
                 col_c1, col_c2 = st.columns(2)
                 with col_c1:
                     st.markdown("#### 📝 Corriger un message erroné")
@@ -454,7 +571,7 @@ else:
                     })
                 
                 df_classement = pd.DataFrame(stats_agents).sort_values(by=["Taux de Réussite (%)", "Messages Transmis"], ascending=False).reset_index(drop=True)
-                df_classement.index += 1  # Ajuste le classement pour commencer à 1 au lieu de 0
+                df_classement.index += 1
                 st.dataframe(df_classement, use_container_width=True)
                 
                 st.markdown("#### 🎖️ Félicitations aux Agents en tête du classement :")

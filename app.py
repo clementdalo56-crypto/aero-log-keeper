@@ -13,8 +13,6 @@ st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", ini
 
 st.markdown("""
     <style>
-   st.markdown("""
-    <style>
     /* 1. FOND VERT NATIONAL SUR LES ÉLÉMENTS EXTÉRIEURS */
     .stApp { 
         background-color: #134e4a !important; 
@@ -111,6 +109,7 @@ st.markdown("""
     .kpi-value { color: #111827; font-size: 24px; font-weight: bold; margin-top: 5px; }
     </style>
 """, unsafe_allow_html=True)
+
 
 
 

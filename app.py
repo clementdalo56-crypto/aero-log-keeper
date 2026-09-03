@@ -155,7 +155,7 @@ else:
     # --- SÉCURITÉ : BLOCAGE AVANT SAISIE SI DESCENTE VALIDÉE ---
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
-    # --- SOUS-MENU 1 : SYNOP & METAR ---
+        # --- SOUS-MENU 1 : SYNOP & METAR ---
     if choix_menu == "📡 SYNOP & METAR":
         st.subheader("📡 Saisie des Messages Réguliers (SYNOP / METAR)")
         if agent_bloque:
@@ -171,19 +171,21 @@ else:
                         st.error(f"❌ Enregistrement impossible : Un message **{type_msg}** a déjà été transmis à **{heure_trans.strftime('%H:%M')}** aujourd'hui. Aucun doublon autorisé.")
                     else:
                         statut = "Transmis dans le délai" if heure_trans.minute <= 5 else "Transmis hors délai"
+                        
+                        # DÉCLARATION CORRECTE DU TABLEAU ET DE LA LIGNE POUR ÉVITER LE NAMEERROR
                         df = pd.read_csv(FICHIER_BDD)
                         nouvelle_ligne = {
                             "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
-                    "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
-                    "Categorie": "SYNOP & METAR", "Type_Message_Fichier": type_msg, "Heure_Transmission": heure_trans.strftime("%H:%M"),
-                    "Statut_Delai": statut, "Details": corps_msg
-                }
-                pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                st.success(f"💾 Enregistré localement. Statut : **{statut}**")
-                
-                sujet_mail = f"[{type_msg}] Station San Pedro - {date_saisie} ({heure_trans.strftime('%H:%M')} UTC)"
-                if transmettre_message_outlook(sujet_mail, corps_msg, ["beta@sodexam.ci"]):
-                    st.success("✉️ Message envoyé automatiquement par e-mail à beta@sodexam.ci")
+                            "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
+                            "Categorie": "SYNOP & METAR", "Type_Message_Fichier": type_msg, "Heure_Transmission": heure_trans.strftime("%H:%M"),
+                            "Statut_Delai": statut, "Details": corps_msg
+                        }
+                        pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
+                        st.success(f"💾 Enregistré localement. Statut : **{statut}**")
+                        
+                        sujet_mail = f"[{type_msg}] Station San Pedro - {date_saisie} ({heure_trans.strftime('%H:%M')} UTC)"
+                        if transmettre_message_outlook(sujet_mail, corps_msg, ["beta@sodexam.ci"]):
+                            st.success("✉️ Message envoyé automatiquement par e-mail à beta@sodexam.ci")
 
     # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":

@@ -195,7 +195,7 @@ else:
                 
                 # Sécurisation réglementaire des conditions temporelles (AGROMET décades 1, 11, 21 avant 09h00)
                 if type_clima == "AGROMET (Décadaire)":
-                    if (jour not in) or (heure_trans.hour >= 9):
+                    if (jour not in 1,11,21) or (heure_trans.hour >= 9):
                         statut = "Transmis hors délai"
                 elif type_clima == "CLIMAT (Mensuel)" and jour > 4:
                     statut = "Transmis hors délai"

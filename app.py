@@ -13,23 +13,44 @@ st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", ini
 
 st.markdown("""
     <style>
+    /* Fond principal blanc */
     .stApp { background-color: #ffffff !important; color: #1f2937 !important; }
     [data-testid="stForm"] { max-width: 850px !important; margin: 0 auto !important; padding: 20px !important; }
+    
+    /* Correction des zones de saisie et textes de formulaires */
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
         color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #d1d5db !important;
     }
-    div[data-testid="stMarkdownContainer"] p, label p { color: #111827 !important; font-family: 'Cambria', serif !important; }
+    
+    /* FORCE l'écriture de TOUS les paragraphes de texte centraux en NOIR pour éviter le texte invisible */
+    div[data-testid="stMarkdownContainer"] p, label p {
+        color: #111827 !important;
+        font-family: 'Cambria', serif !important;
+    }
+    
+    /* Design de la barre latérale */
     [data-testid="stSidebar"] { background-color: #f3f4f6 !important; border-right: 3px solid #f97316 !important; }
+    
+    /* MODIFICATION : FORCE l'écriture des sous-menus à être en TAILLE 14 et en Cambria */
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
-        font-family: 'Cambria', serif !important; font-size: 13px !important; font-weight: bold !important; color: #111827 !important;
+        font-family: 'Cambria', serif !important;
+        font-size: 14px !important; /* TAILLE AUGMENTÉE À 14 */
+        font-weight: bold !important;
+        color: #111827 !important;
     }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
+    
+    /* Design du bouton de validation */
     div.stButton > button { background-color: #f97316 !important; border-radius: 8px !important; border: none !important; padding: 10px 24px !important; }
     div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 14px !important; }
     div.stButton > button:hover { background-color: #ea580c !important; }
+    
+    /* Bandeaux d'alertes */
     div[data-testid="stNotification"] { background-color: #f0fdf4 !important; border-left: 5px solid #16a34a !important; }
     .stAlert { background-color: #fff7ed !important; border-left: 5px solid #f97316 !important; }
     .stAlert p, .stAlert div, [data-testid="stNotification"] p { color: #1a1a1a !important; font-weight: 600 !important; font-size: 14px !important; }
+    
+    /* Blocs statistiques (KPI) */
     .kpi-box {
         background-color: #ffffff; padding: 15px; border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e5e7eb; border-top: 4px solid #f97316;

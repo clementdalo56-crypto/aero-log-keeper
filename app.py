@@ -369,19 +369,19 @@ else:
         st.subheader("📊 Rendement, Historique Temporel Total et Classement")
         df_stats = pd.read_csv(FICHIER_BDD)
         
-        # --- FILTRES AVANCÉS MULTI-ANNÉES ---
+                # --- FILTRES AVANCÉS MULTI-ANNÉES ---
         col_t1, col_t2, col_t3 = st.columns(3)
         with col_t1:
             if not df_stats.empty:
-    # Force toutes les années de la BDD à devenir du texte pour éviter le plantage du tri
-    liste_annees = sorted([str(a) for a in df_stats['Annee'].dropna().unique().tolist()])
-else:
-    liste_annees = [maintenant.strftime("%Y")]
+                liste_annees = sorted([str(a) for a in df_stats['Annee'].dropna().unique().tolist()])
+            else:
+                liste_annees = [maintenant.strftime("%Y")]
+                
+            if maintenant.strftime("%Y") not in liste_annees: 
+                liste_annees.append(maintenant.strftime("%Y"))
+                
+            annee_sel = st.selectbox("📅 Sélectionner l'Année (Suivi historique complet) :", sorted(liste_annees, reverse=True))
 
-if maintenant.strftime("%Y") not in liste_annees: 
-    liste_annees.append(maintenant.strftime("%Y"))
-
-annee_sel = st.selectbox("📅 Sélectionner l'Année (Suivi historique complet) :", sorted(liste_annees, reverse=True))
 
         with col_t2:
             liste_mois = ["Tous", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]

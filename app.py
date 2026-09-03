@@ -40,7 +40,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 MOT_DE_PASSE_REQUIS = "sanpedro2026"
-MDP_ADMIN_REQUIS = "admin123"
 
 FICHIER_BDD = "donnees_meteo_sanpedro.csv"
 FICHIER_AGENTS = "presence_agents_sanpedro.csv"
@@ -81,7 +80,7 @@ def transmettre_message_outlook(sujet, corps, destinataires, fichier_joint=None)
         serveur.quit()
         return True
     except Exception as e:
-        st.warning("📢 Avis : Message stocké localement. L'envoi direct Outlook a échoué (Vérifiez le mot de passe d'application Office 365).")
+        st.warning("📢 Avis : Message stocké en base locale. L'envoi direct Outlook a échoué.")
         return False
 
 # --- INITIALISATION DES ARCHIVES COMPLÈTES ---
@@ -95,23 +94,18 @@ if not os.path.exists(FICHIER_OBS):
 
 # --- FONCTIONS DE CONTRÔLE QA/QC ---
 def verifier_si_agent_descendu(agent, date_du_jour):
-    """Bloque la saisie si l'agent a déjà signé sa Fin de service (Descente) aujourd'hui"""
     df_p = pd.read_csv(FICHIER_AGENTS)
     if not df_p.empty:
         descente = df_p[(df_p["Date"] == date_du_jour) & (df_p["Agent"] == agent) & (df_p["Action"] == "Fin de service (Descente)")]
-        if not descente.empty:
-            return True
+        if not descente.empty: return True
     return False
 
 def verifier_doublon_message(type_msg, date_data, heure_trans):
-    """Empêche d'enregistrer deux fois le même message pour une même heure/date de transmission"""
     df_b = pd.read_csv(FICHIER_BDD)
     if not df_b.empty:
-        # Standardisation des heures pour la comparaison (HH:MM)
         heure_str = heure_trans.strftime("%H:%M") if hasattr(heure_trans, 'strftime') else str(heure_trans)[:5]
         doublon = df_b[(df_b["Type_Message_Fichier"] == type_msg) & (df_b["Date_Donnees"] == date_data) & (df_b["Heure_Transmission"] == heure_str)]
-        if not doublon.empty:
-            return True
+        if not doublon.empty: return True
     return False
 
 # --- ACCÈS SÉCURISÉ AGENTS ---
@@ -155,39 +149,33 @@ else:
     # --- SÉCURITÉ : BLOCAGE AVANT SAISIE SI DESCENTE VALIDÉE ---
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
-        # --- SOUS-MENU 1 : SYNOP & METAR ---
+    # --- SOUS-MENU 1 : SYNOP & METAR ---
     if choix_menu == "📡 SYNOP & METAR":
         st.subheader("📡 Saisie des Messages Réguliers (SYNOP / METAR)")
         if agent_bloque:
-            st.error(f"🛑 Accès refusé : L'agent **{agent_actif}** a déjà enregistré sa fin de service pour aujourd'hui. Veuillez laisser l'agent de relève sélectionner son nom.")
+            st.error(f"🛑 Accès refusé : L'agent **{agent_actif}** a déjà enregistré sa fin de service pour aujourd'hui.")
         else:
             with st.form("form_synop_metar"):
                 type_msg = st.selectbox("Type de message :", ["SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"])
-                
-                # Sélection de l'heure nominale de l'observation météo (ex: 18:00)
                 heures_observations = [f"{h:02d}:00" for h in range(24)]
-                heure_nominale_str = st.selectbox("🕒 Heure officielle de l'observation (H UTC) :", heures_observations, index=datetime.now().hour)
-                
+                heure_nominale_str = st.selectbox("🕒 Heure officielle de l'observation (H UTC) :", heures_observations, index=maintenant.hour)
                 heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
                 corps_msg = st.text_area("Texte réglementaire du message :", height=150)
                 
                 if st.form_submit_button("🚀 Valider, Archiver et Transmettre"):
                     if type_msg != "SPECI" and verifier_doublon_message(type_msg, date_saisie, heure_trans):
-                        st.error(f"❌ Enregistrement impossible : Un message {type_msg} a déjà été transmis à {heure_trans.strftime('%H:%M')} aujourd'hui.")
+                        st.error(f"❌ Enregistrement impossible : Un message {type_msg} a déjà été transmis à cette heure aujourd'hui.")
                     else:
-                        # --- CALCUL RÉGLEMENTAIRE DE LA FENÊTRE (Entre H-10 min et H+5 min) ---
+                        # --- FENÊTRE RÉGLEMENTAIRE (H-10 min à H+5 min inclus) ---
                         heure_nominale_dt = datetime.strptime(f"{date_saisie} {heure_nominale_str}", "%Y-%m-%d %H:%M")
                         heure_transmission_dt = datetime.strptime(f"{date_saisie} {heure_trans.strftime('%H:%M')}", "%Y-%m-%d %H:%M")
                         
-                        # Définition des bornes de la fenêtre réglementaire (Ex: 17:50 et 18:05)
                         borne_inferieure = heure_nominale_dt - timedelta(minutes=10)
                         borne_superieure = heure_nominale_dt + timedelta(minutes=5)
                         
-                        # Validation stricte de la plage horaire
-                        if borne_inferieure <= heure_transmission_dt <= borne_superieure:
-                            statut = "Transmis dans le délai"
-                        else:
-                            statut = "Transmis hors délai"
+                        
+                        # Validation de la plage horaire stricte (H-10 à H+5 inclus)
+                        statut = "Transmis dans le délai" if borne_inferieure <= heure_transmission_dt <= borne_superieure else "Transmis hors délai"
                         
                         # Archivage en base de données locale
                         df = pd.read_csv(FICHIER_BDD)
@@ -198,16 +186,16 @@ else:
                             "Statut_Delai": statut, "Details": f"[Obs: {heure_nominale_str}] {corps_msg}"
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success(f"💾 Message enregistré localement. Statut validé : **{statut}** (Fenêtre réglementaire : {borne_inferieure.strftime('%H:%M')} - {borne_superieure.strftime('%H:%M')})")
+                        st.success(f"💾 Message enregistré localement ! Statut : **{statut}**")
                         
                         sujet_mail = f"[{type_msg}] Station San Pedro - Obs de {heure_nominale_str} (Transmis à {heure_trans.strftime('%H:%M')} UTC)"
                         if transmettre_message_outlook(sujet_mail, corps_msg, ["beta@sodexam.ci"]):
                             st.success("✉️ Message envoyé automatiquement par e-mail à beta@sodexam.ci")
+
     # --- SOUS-MENU 2 : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
         st.subheader("🌡️ Saisie des Données Extrêmes")
-        if agent_bloque:
-            st.error(f"🛑 Saisie bloquée : L'agent **{agent_actif}** a déjà signé sa fin de service (Descente).")
+        if agent_bloque: st.error("🛑 Saisie bloquée : Vous avez déjà signé votre fin de service.")
         else:
             with st.form("form_extremes"):
                 heure_trans = st.time_input("⏱️ Heure réelle de transmission du message :", maintenant.time())
@@ -217,9 +205,8 @@ else:
                 
                 if st.form_submit_button("🚀 Enregistrer les Extrêmes"):
                     date_donnees = (maintenant - timedelta(days=1)).strftime("%Y-%m-%d")
-                    
                     if verifier_doublon_message("DONNEES EXTREMES", date_donnees, heure_trans):
-                        st.error(f"❌ Erreur : Les données extrêmes pour la journée du {date_donnees} ont déjà été enregistrées.")
+                        st.error("❌ Erreur : Les données extrêmes de la veille ont déjà été enregistrées.")
                     else:
                         statut = "Transmis dans le délai" if (6 <= heure_trans.hour < 8) or (heure_trans.hour == 8 and heure_trans.minute == 0) else "Transmis hors délai"
                         df = pd.read_csv(FICHIER_BDD)
@@ -231,22 +218,20 @@ else:
                             "Statut_Delai": statut, "Details": contenu_texte
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success(f"💾 Enregistré localement. Statut : **{statut}**")
+                        st.success(f"💾 Enregistré localement ! Statut : **{statut}**")
                         
                         sujet_mail = f"[DONNEES EXTREMES] Station San Pedro - Obs du {date_donnees}"
                         if transmettre_message_outlook(sujet_mail, contenu_texte, ["service.prevision@sodexam.com"]):
-                            st.success("✉️ Données transmises automatiquement par e-mail au service prévision.")
+                            st.success("✉️ Données transmises par e-mail au service prévision.")
 
     # --- SOUS-MENU 3 : POINT INSTRUMENT & CORRECTION ---
     elif choix_menu == "🛠️ Point Instrument & Correction":
         st.subheader("🛠️ Point Hebdomadaire des Instruments et Chiffrement")
-        if agent_bloque:
-            st.error(f"🛑 Action impossible : {agent_actif} est noté en fin de service.")
+        if agent_bloque: st.error("🛑 Action impossible en fin de service.")
         else:
             with st.form("form_instruments"):
                 fichier_word = st.file_uploader("Téléverser le rapport d'instrumentation (Fichier Word) :", type=["docx", "doc"])
                 commentaires = st.text_area("Notes ou détails des corrections de messages :")
-                
                 if st.form_submit_button("🚀 Enregistrer le Rapport"):
                     if fichier_word is not None:
                         df = pd.read_csv(FICHIER_BDD)
@@ -257,19 +242,17 @@ else:
                             "Statut_Delai": "Transmis dans le délai", "Details": f"Fichier: {fichier_word.name} | Notes: {commentaires}"
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success("💾 Rapport archivé localement avec succès.")
+                        st.success("💾 Rapport archivé localement.")
                         
                         sujet_mail = f"[INSTRUMENTS] Point Hebdomadaire - Station San Pedro"
-                        corps_mail = f"Bonjour,\nVeuillez trouver ci-joint le point des instruments.\nNotes de l'agent : {commentaires}"
-                        if transmettre_message_outlook(sujet_mail, corps_mail, ["alain.gnayoro@sodexam.ci"], fichier_joint=fichier_word):
-                            st.success("✉️ Rapport Word envoyé avec succès à Alain Gnayoro.")
+                        corps_mail = f"Bonjour,\nVeuillez trouver ci-joint le point des instruments.\nNotes: {commentaires}"
+                        transmettre_message_outlook(sujet_mail, corps_mail, ["alain.gnayoro@sodexam.ci"], fichier_joint=fichier_word)
                     else: st.warning("Veuillez charger le fichier Word.")
 
     # --- SOUS-MENU 4 : AGROMET & CLIMAT ---
     elif choix_menu == "🌱 AGROMET & CLIMAT":
         st.subheader("🌱 Saisie des Rapports Décadaires AGROMET & Mensuels CLIMAT")
-        if agent_bloque:
-            st.error("🛑 Saisie bloquée en raison de la fin de votre tour de service.")
+        if agent_bloque: st.error("🛑 Saisie bloquée en fin de service.")
         else:
             with st.form("form_agromet_climat"):
                 type_clima = st.selectbox("Type de rapport :", ["AGROMET (Décadaire)", "CLIMAT (Mensuel)"])
@@ -278,12 +261,12 @@ else:
                 
                 if st.form_submit_button("🚀 Transmettre le Rapport"):
                     if verifier_doublon_message(type_clima, date_saisie, heure_trans):
-                        st.error(f"❌ Doublon interdit : Un rapport **{type_clima}** a déjà été validé aujourd'hui.")
+                        st.error("❌ Un rapport identique existe déjà pour aujourd'hui.")
                     else:
                         jour = maintenant.day
                         statut = "Transmis dans le délai"
                         if type_clima == "AGROMET (Décadaire)":
-                            if (jour not in 1,11,21) or (heure_trans.hour >= 9): statut = "Transmis hors délai"
+                            if (jour not in) or (heure_trans.hour >= 9): statut = "Transmis hors délai"
                         elif type_clima == "CLIMAT (Mensuel)" and jour > 4: statut = "Transmis hors délai"
                             
                         df = pd.read_csv(FICHIER_BDD)
@@ -294,17 +277,15 @@ else:
                             "Statut_Delai": statut, "Details": corps_clima
                         }
                         pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
-                        st.success(f"💾 Enregistré. Statut : **{statut}**")
+                        st.success(f"💾 Rapport enregistré ! Statut : **{statut}**")
                         
                         sujet_mail = f"[{type_clima}] Transmission Station San Pedro - {date_saisie}"
-                        if transmettre_message_outlook(sujet_mail, corps_clima, ["augustin.mian@sodexam.ci"]):
-                            st.success("✉️ Rapport envoyé par e-mail à Augustin Mian.")
+                        transmettre_message_outlook(sujet_mail, corps_clima, ["augustin.mian@sodexam.ci"])
 
     # --- SOUS-MENU 5 : TABLEAU CLIMATOLOGIQUE (TCM) ---
     elif choix_menu == "📂 Tableau Climatologique (TCM)":
         st.subheader("📂 Suivi du Fichier Excel TCM Renseigné à Part")
-        if agent_bloque:
-            st.error("🛑 Dépôt bloqué car vous avez déjà validé votre fin de service.")
+        if agent_bloque: st.error("🛑 Dépôt bloqué en fin de service.")
         else:
             with st.form("form_tcm"):
                 fichier_excel_tcm = st.file_uploader("Sélectionnez votre classeur Excel TCM :", type=["xlsx", "xls"])
@@ -322,9 +303,8 @@ else:
                         
                         sujet_mail = f"[TCM EXCEL] Envoi Périodique - San Pedro"
                         corps_mail = "Bonjour,\nVeuillez trouver ci-joint le fichier Excel TCM de San Pedro."
-                        if transmettre_message_outlook(sujet_mail, corps_mail, ["juliette.assi@sodexam.ci"], fichier_joint=fichier_excel_tcm):
-                            st.success("✉️ Classeur Excel transmis automatiquement à Juliette Assi.")
-                else: st.warning("Veuillez charger un fichier Excel valide.")
+                        transmettre_message_outlook(sujet_mail, corps_mail, ["juliette.assi@sodexam.ci"], fichier_joint=fichier_excel_tcm)
+                    else: st.warning("Veuillez charger un fichier Excel valide.")
 
     # --- SOUS-MENU 6 : PRISE & FIN DE SERVICE ---
     elif choix_menu == "⏰ Prise & Fin de Service":
@@ -334,14 +314,13 @@ else:
             heure_action = st.time_input("Heure officielle de l'action :", maintenant.time())
             if st.form_submit_button("💾 Valider l'heure"):
                 df_p = pd.read_csv(FICHIER_AGENTS)
-                
                 deja_signe = df_p[(df_p["Date"] == date_saisie) & (df_p["Agent"] == agent_actif) & (df_p["Action"] == action)]
                 if not deja_signe.empty:
-                    st.error(f"❌ Action refusée : Vous avez déjà enregistré une **{action}** pour la journée d'aujourd'hui.")
+                    st.error(f"❌ Action refusée : Vous avez déjà enregistré une {action} aujourd'hui.")
                 else:
                     nouvelle_p = {"Date": date_saisie, "Agent": agent_actif, "Action": action, "Heure": heure_action.strftime("%H:%M")}
                     pd.concat([df_p, pd.DataFrame([nouvelle_p])], ignore_index=True).to_csv(FICHIER_AGENTS, index=False)
-                    st.success(f"✅ Présence validée avec succès pour {agent_actif} (**{action}**).")
+                    st.success(f"✅ Présence validée pour {agent_actif} ({action}).")
 
     # --- SOUS-MENU 7 : QUALITÉ & JUSTIFICATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":
@@ -360,9 +339,9 @@ else:
                 corps_mail = f"Message : {msg_concerne}\nExplications : {explications}\nSaisi par : {agent_actif}"
                 transmettre_message_outlook(sujet_mail, corps_mail, ["service.prevision@sodexam.com", "alain.gnayoro@sodexam.ci"])
 
-    # --- SOUS-MENU 8 : TABLEAU DE BORD & FILTRES ---
+    # --- SOUS-MENU 8 : TABLEAU DE BORD & MODIFICATION DES SAISIES ---
     elif choix_menu == "📈 Tableau de bord & Décomptes":
-        st.subheader("📊 Rendement et Efficacité Règlementaire")
+        st.subheader("📊 Rendement, Efficacité Règlementaire & Gestion du Registre")
         df_stats = pd.read_csv(FICHIER_BDD)
         
         col_t1, col_t2, col_t3 = st.columns(3)
@@ -404,18 +383,50 @@ else:
         couleur_rendement = "#16a34a" if taux_rendement >= 85 else ("#f97316" if taux_rendement >= 50 else "#ef4444")
         st.markdown(f"<div style='background-color: #f9fafb; padding: 15px; border-radius: 10px; text-align: center; border-left: 6px solid {couleur_rendement};'><p style='margin:0; font-size:12px; font-weight:bold; color:#6b7280;'>🎯 TAUX DE RENDEMENT RÉGLEMENTAIRE GLOBAL</p><p style='margin:5px 0 0 0; font-size:32px; font-weight:bold; color:{couleur_rendement};'>{taux_rendement:.1f} %</p></div>", unsafe_allow_html=True)
 
+        # Outils d'édition libres
         st.markdown("---")
-        st.markdown("### 🗄️ Accès aux Registres Archivés de la Station")
-        mode_admin = st.checkbox("🔑 Débloquer la consultation du tableau brut (Réservé à l'Administrateur)")
+        st.markdown("### 🗄️ Registre Complet & Outils de Correction Rapide")
         
-        if mode_admin:
-            code_admin = st.text_input("Saisissez le mot de passe Administrateur :", type="password")
-            if code_admin == MDP_ADMIN_REQUIS:
-                st.success("🔓 Authentification Administrateur validée. Accès autorisé.")
-                if not df_final.empty:
-                    st.dataframe(df_final, use_container_width=True)
-                else: st.info("Aucun enregistrement trouvé pour ce filtre.")
-            elif code_admin != "":
-                st.error("❌ Mot de passe Administrateur incorrect. Affichage masqué.")
-        else:
-            st.info("🔒 Le tableau récapitulatif brut est masqué pour les agents. Cochez la case ci-dessus pour vous connecter en tant qu'administrateur.")
+        df_global = pd.read_csv(FICHIER_BDD)
+        
+        if not df_global.empty:
+            df_global['ID'] = df_global.index
+            st.markdown("#### 1. Liste de tous les messages archivés :")
+            st.dataframe(df_global[["ID", "Date_Saisie", "Heure_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
+            
+            st.markdown("---")
+            col_action1, col_action2 = st.columns(2)
+            
+            with col_action1:
+                st.markdown("#### 📝 Corriger une Saisie")
+                id_modif = st.number_input("Sélectionnez l'ID du message à corriger :", min_value=0, max_value=len(df_global)-1, step=1)
+                ligne_a_modifier = df_global.iloc[id_modif]
+                
+                with st.form("form_edition_agent"):
+                    new_agent = st.selectbox("Auteur de la correction :", liste_agents, index=liste_agents.index(ligne_a_modifier['Agent']) if ligne_a_modifier['Agent'] in liste_agents else 0)
+                    new_heure_trans = st.text_input("Ajuster l'Heure réelle de transmission (HH:MM) :", value=str(ligne_a_modifier['Heure_Transmission']))
+                    new_statut = st.selectbox("Re-qualifier le délai :", ["Transmis dans le délai", "Transmis hors délai"], index=0 if ligne_a_modifier['Statut_Delai'] == "Transmis dans le délai" else 1)
+                    new_details = st.text_area("Ajuster le texte du message :", value=str(ligne_a_modifier['Details']))
+                    
+                    if st.form_submit_button("💾 Enregistrer les Corrections"):
+                        df_global.at[id_modif, 'Agent'] = new_agent
+                        df_global.at[id_modif, 'Heure_Transmission'] = new_heure_trans
+                        df_global.at[id_modif, 'Statut_Delai'] = new_statut
+                        df_global.at[id_modif, 'Details'] = new_details
+                        
+                        df_global.drop(columns=['ID']).to_csv(FICHIER_BDD, index=False)
+                        st.success(f"✅ Le message ID {id_modif} a été corrigé avec succès !")
+                        st.rerun()
+                        
+            with col_action2:
+                st.markdown("#### ❌ Supprimer un Message erroné")
+                id_suppr = st.number_input("Sélectionnez l'ID du message à effacer :", min_value=0, max_value=len(df_global)-1, step=1)
+                st.warning(f"⚠️ Attention : Vous allez retirer définitivement le message {df_global.iloc[id_suppr]['Type_Message_Fichier']} du {df_global.iloc[id_suppr]['Date_Saisie']}.")
+                
+                if st.button("🗑️ Confirmer la Suppression", use_container_width=True):
+                    df_nettoye = df_global.drop(index=id_suppr)
+                    df_nettoye.drop(columns=['ID']).to_csv(FICHIER_BDD, index=False)
+st.success("💥 Message supprimé du registre avec succès.")
+st.rerun()
+else:
+st.info("ℹ️ Aucun message enregistré pour le moment.")

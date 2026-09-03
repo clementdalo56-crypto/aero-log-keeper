@@ -346,76 +346,128 @@ else:
         st.markdown("### 🗂️ Historique des observations de la station")
         st.dataframe(pd.read_csv(FICHIER_OBS), use_container_width=True)
 
-       # --- SOUS-MENU 8 : TABLEAU DE BORD & STATISTIQUES ---
+           # --- SOUS-MENU 8 : TABLEAU DE BORD & STATISTIQUES ---
     elif choix_menu == "📈 Tableau de bord & Décomptes":
-        st.subheader("📊 Décomptes Temporels, Taux de Réussite et Statistiques")
+        st.subheader("📊 Tableau de Bord Réglementaire & Rendement des Transmissions")
         df_stats = pd.read_csv(FICHIER_BDD)
         
-        # --- CALCULS DES DÉCOMPTES TEMPORELS ---
-        aujourdhui_dt = datetime.now()
-        str_aujourdhui = aujourdhui_dt.strftime("%Y-%m-%d")
-        
-        # Traduction manuelle des mois en français pour correspondre au format de la BDD
-        mois_fr = {
-            "January": "January", "February": "February", "March": "March", "April": "April",
-            "May": "May", "June": "June", "July": "July", "August": "August",
-            "September": "September", "October": "October", "November": "November", "December": "December"
+        # --- FILTRES DE SÉLECTION EN HAUT ---
+        col_t1, col_t2, col_t3 = st.columns(3)
+        with col_t1:
+            periode_filtre = st.selectbox("⏳ Échelle temporelle à analyser :", ["Journalier (Aujourd'hui)", "Mensuel (Mois en cours)", "Annuel (Année en cours)"])
+        with col_t2:
+            liste_types_dispos = ["Tous", "SYNOP Horaire", "SYNOP Principal", "METAR", "METREPORT", "SPECI"]
+            type_msg_filtre = st.selectbox("📡 Filtrer par Type de Message :", liste_types_dispos)
+        with col_t3:
+            # Récupération automatique de la date actuelle
+            maintenant_dt = datetime.now()
+            str_aujourdhui = maintenant_dt.strftime("%Y-%m-%d")
+            
+            mois_fr = {
+                "January": "January", "February": "February", "March": "March", "April": "April",
+                "May": "May", "June": "June", "July": "July", "August": "August",
+                "September": "September", "October": "October", "November": "November", "December": "December"
+            }
+            str_mois = mois_fr.get(maintenant_dt.strftime("%B"), maintenant_dt.strftime("%B"))
+            str_annee = maintenant_dt.strftime("%Y")
+            
+            st.markdown(f"<p style='margin-top:25px; font-weight:bold; color:#f97316;'>📅 Date : {str_aujourdhui}</p>", unsafe_allow_html=True)
+
+        # --- LOGIQUE DE CALCUL DU FILTRE TEMPOREL ---
+        if not df_stats.empty:
+            # 1. Application du filtre de période
+            if "Journalier" in periode_filtre:
+                df_temp = df_stats[df_stats["Date_Saisie"] == str_aujourdhui]
+                facteur_jours = 1
+            elif "Mensuel" in periode_filtre:
+                df_temp = df_stats[(df_stats["Mois"] == str_mois) & (df_stats["Annee"] == str_annee)]
+                # Nombre de jours écoulés dans le mois pour un quota juste
+                facteur_jours = maintenant_dt.day
+            else:
+                df_temp = df_stats[df_stats["Annee"] == str_annee]
+                # Nombre de jours écoulés dans l'année
+                facteur_jours = maintenant_dt.timetuple().tm_yday
+                
+            # 2. Application du filtre par type de message
+            if type_msg_filtre != "Tous":
+                df_final = df_temp[df_temp["Type_Message_Fichier"] == type_msg_filtre]
+            else:
+                df_final = df_temp
+        else:
+            df_final = pd.DataFrame()
+            facteur_jours = 1
+
+        # --- CALCUL DES QUOTAS RÉGLEMENTAIRES ATTENDUS ---
+        # Définition des attendus par jour
+        quotas_par_jour = {
+            "SYNOP Horaire": 24,
+            "SYNOP Principal": 8,
+            "METAR": 14,
+            "METREPORT": 14,
+            "SPECI": 0 # Non soumis à quota fixe
         }
-        str_mois = mois_fr.get(aujourdhui_dt.strftime("%B"), aujourdhui_dt.strftime("%B"))
-        str_annee = aujourdhui_dt.strftime("%Y")
         
-        if not df_stats.empty:
-            total_jour = len(df_stats[df_stats["Date_Saisie"] == str_aujourdhui])
-            total_mois = len(df_stats[(df_stats["Mois"] == str_mois) & (df_stats["Annee"] == str_annee)])
-            total_annee = len(df_stats[df_stats["Annee"] == str_annee])
-            
-            # Calcul du Taux de Réussite (Dans les délais)
-            dans_delai_total = len(df_stats[df_stats['Statut_Delai'] == "Transmis dans le délai"])
-            total_messages = len(df_stats)
-            taux_reussite = (dans_delai_total / total_messages) * 100 if total_messages > 0 else 0.0
+        if type_msg_filtre != "Tous":
+            attendus = quotas_par_jour.get(type_msg_filtre, 0) * facteur_jours
         else:
-            total_jour, total_mois, total_annee, taux_reussite = 0, 0, 0, 0.0
+            # Si "Tous", on fait la somme des quotas fixes configurés
+            attendus = sum([quotas_par_jour["SYNOP Horaire"], quotas_par_jour["SYNOP Principal"], quotas_par_jour["METAR"], quotas_par_jour["METREPORT"]]) * facteur_jours
+
+        # Comptages réels
+        transmis = len(df_final)
+        dans_delai = len(df_final[df_final["Statut_Delai"] == "Transmis dans le délai"])
+        hors_delai = len(df_final[df_final["Statut_Delai"] == "Transmis hors délai"])
         
-        # Affichage des 4 cartes d'indicateurs (KPIs)
-        dc1, dc2, dc3, dc4 = st.columns(4)
-        with dc1:
-            st.markdown(f'<div class="kpi-box"><div class="kpi-title">📋 Décompte Journalier</div><div class="kpi-value">{total_jour} message(s)</div></div>', unsafe_allow_html=True)
-        with dc2:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #16a34a;"><div class="kpi-title">📅 Décompte Mensuel</div><div class="kpi-value">{total_mois} message(s)</div></div>', unsafe_allow_html=True)
-        with dc3:
-            st.markdown(f'<div class="kpi-box" style="border-top-color: #3b82f6;"><div class="kpi-title">🗓️ Décompte Annuel</div><div class="kpi-value">{total_annee} message(s)</div></div>', unsafe_allow_html=True)
-        with dc4:
-            # Carte verte si bon taux, orange sinon
-            couleur_taux = "#16a34a" if taux_reussite >= 80 else "#f97316"
-            st.markdown(f'<div class="kpi-box" style="border-top-color: {couleur_taux};"><div class="kpi-title">🎯 Taux de Réussite</div><div class="kpi-value">{taux_reussite:.1f} %</div></div>', unsafe_allow_html=True)
-            
+        # Calcul des messages manquants (non transmis)
+        if type_msg_filtre == "SPECI":
+            non_transmis = 0 # Pas de notion de manquant pour les SPECI
+            taux_rendement = 100.0 if transmis > 0 else 0.0
+        else:
+            non_transmis = max(0, attendus - transmis)
+            taux_rendement = (dans_delai / attendus) * 100 if attendus > 0 else 0.0
+
+        # --- AFFICHAGE DES CARTES DE RENDEMENT (KPI) ---
+        st.markdown(f"#### 📈 Indicateurs pour la période : **{periode_filtre}** | Message : **{type_msg_filtre}**")
+        
+        k1, k2, k3, k4, k5 = st.columns(5)
+        with k1:
+            st.markdown(f'<div class="kpi-box"><div class="kpi-title">📋 Attendus (Théorique)</div><div class="kpi-value">{attendus}</div></div>', unsafe_allow_html=True)
+        with k2:
+            st.markdown(f'<div class="kpi-box" style="border-top-color: #3b82f6;"><div class="kpi-title">📤 Transmis (Total)</div><div class="kpi-value">{transmis}</div></div>', unsafe_allow_html=True)
+        with k3:
+            st.markdown(f'<div class="kpi-box" style="border-top-color: #16a34a;"><div class="kpi-title">⏱️ Dans les Délais</div><div class="kpi-value">{dans_delai}</div></div>', unsafe_allow_html=True)
+        with k4:
+            st.markdown(f'<div class="kpi-box" style="border-top-color: #f97316;"><div class="kpi-title">⚠️ Hors Délais</div><div class="kpi-value">{hors_delai}</div></div>', unsafe_allow_html=True)
+        with k5:
+            # Alerte rouge si des messages réglementaires sont manquants
+            couleur_manquant = "#ef4444" if non_transmis > 0 else "#6b7280"
+            st.markdown(f'<div class="kpi-box" style="border-top-color: {couleur_manquant};"><div class="kpi-title">❌ Non Transmis</div><div class="kpi-value">{non_transmis}</div></div>', unsafe_allow_html=True)
+
+        # Affichage du Taux de Performance Global en grand juste en dessous
+        st.markdown("<br>", unsafe_allow_html=True)
+        couleur_rendement = "#16a34a" if taux_rendement >= 85 else ("#f97316" if taux_rendement >= 50 else "#ef4444")
+        st.markdown(f"""
+            <div style='background-color: #f9fafb; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e5e7eb; border-left: 6px solid {couleur_rendement};'>
+                <p style='margin:0; font-size:14px; text-transform:uppercase; font-weight:bold; color:#6b7280;'>🎯 Taux de Rendement Réglementaire (Efficacité dans les Délais)</p>
+                <p style='margin:5px 0 0 0; font-size:36px; font-weight:bold; color:{couleur_rendement};'>{taux_rendement:.1f} %</p>
+                <small style='color:#9ca3af;'>Formule de calcul : (Messages Transmis dans les Délais / Messages Attendus Obligatoires) × 100</small>
+            </div>
+        """, unsafe_allow_html=True)
+
         st.markdown("---")
-        
-        # --- AFFICHAGE DES TABLEAUX ET GRAPHICULES EN CAS DE DONNÉES ---
-        if not df_stats.empty:
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                annee_sel = st.selectbox("Filtrer par Année :", sorted(df_stats['Annee'].unique().tolist()))
-            with col_f2:
-                mois_sel = st.selectbox("Filtrer par Mois :", ["Tous"] + sorted(df_stats[df_stats['Annee'] == annee_sel]['Mois'].unique().tolist()))
+
+        # --- RENDER DES HISTORIQUES ET DES DONNÉES FILTRÉES ---
+        if not df_final.empty:
+            st.markdown("### 🗂️ Liste des messages correspondants au tri")
+            st.dataframe(df_final[["Date_Saisie", "Heure_Saisie", "Agent", "Type_Message_Fichier", "Statut_Delai", "Details"]], use_container_width=True)
             
-            df_filtre = df_stats[df_stats['Annee'] == annee_sel]
-            if mois_sel != "Tous":
-                df_filtre = df_filtre[df_filtre['Mois'] == mois_sel]
-                
-            st.markdown("### 📅 Synthèse Générale de l'Activité")
-            tab_croise = pd.crosstab(df_filtre['Type_Message_Fichier'], df_filtre['Mois'], margins=True, margins_name="Total Général")
-            st.dataframe(tab_croise, use_container_width=True)
-            
-            col_g1, col_g2 = st.columns(2)
-            with col_g1:
-                st.markdown("**📈 Volumes par type de message / fichier**")
-                st.bar_chart(df_filtre['Type_Message_Fichier'].value_counts())
-            with col_g2:
-                st.markdown("**📉 Répartition du respect des délais**")
-                st.bar_chart(df_filtre['Statut_Delai'].value_counts())
-                
-            st.markdown("### 🗄️ Historique complet de la Base de Données")
-            st.dataframe(df_filtre, use_container_width=True)
+            st.markdown("### 📊 Ventilation Statistique Complète")
+            col_chart1, col_chart2 = st.columns(2)
+            with col_chart1:
+                st.markdown("**Répartition par Statut de Délai**")
+                st.bar_chart(df_final['Statut_Delai'].value_counts())
+            with col_chart2:
+                st.markdown("**Activité d'envoi par Agent**")
+                st.bar_chart(df_final['Agent'].value_counts())
         else:
-            st.info("ℹ️ Aucune observation enregistrée dans la base pour le moment. Effectuez votre première saisie régulière (SYNOP ou METAR) pour activer le tableau de bord.")
+            st.info("ℹ️ Aucun message enregistré ne correspond à ce filtre pour la période sélectionnée.")

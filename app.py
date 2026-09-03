@@ -21,7 +21,13 @@ st.markdown("""
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
         color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #d1d5db !important;
     }
-    
+        /* Force l'heure saisie par l'agent à s'afficher en Noir Foncé sur fond clair */
+    div[data-testid="stTimeInput"] input {
+        color: #111827 !important;
+        background-color: #f3f4f6 !important;
+        font-weight: bold !important;
+    }
+
     /* FORCE l'écriture de TOUS les paragraphes de texte centraux en NOIR pour éviter le texte invisible */
     div[data-testid="stMarkdownContainer"] p, label p {
         color: #111827 !important;

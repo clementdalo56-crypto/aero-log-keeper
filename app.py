@@ -12,68 +12,66 @@ from email import encoders
 st.set_page_config(page_title="QA/QC - Station de San Pedro", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""
-    /* Ajout du logo SODEXAM en fond d'écran transparent (Filigrane) */
-    .stApp {
+    <style>
+    /* 1. CONFIGURATION DU FOND PRINCIPAL AVEC LOGO FILIGRANE */
+    .stApp { 
+        background-color: #ffffff !important; 
+        color: #1f2937 !important; 
         background-image: url("app/static/logo_sodexam.png"), url("logo_sodexam.png") !important;
         background-repeat: no-repeat !important;
-        background-position: center 30% !important; /* Centré horizontalement, légèrement vers le haut */
-        background-size: 450px !important; /* Ajuste la taille du logo en fond */
+        background-position: center 35% !important;
+        background-size: 400px !important;
         background-attachment: fixed !important;
+        z-index: 1 !important;
     }
     
-    /* Applique une opacité très légère (transparence) uniquement sur l'image de fond */
+    /* Effet d'opacité douce pour rendre le logo transparent en arrière-plan */
     .stApp::before {
         content: "" !important;
         position: absolute !important;
         top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(255, 255, 255, 0.90) !important; /* Voile blanc pour rendre le logo transparent */
+        background-color: rgba(255, 255, 255, 0.92) !important;
         z-index: -1 !important;
     }
-
-    <style>
-    /* Fond principal blanc */
-    .stApp { background-color: #ffffff !important; color: #1f2937 !important; }
+    
+    /* 2. CONFIGURATION DES FORMULAIRES ET ÉLÉMENTS CENTRAUX */
     [data-testid="stForm"] { max-width: 850px !important; margin: 0 auto !important; padding: 20px !important; }
     
-    /* MODIFICATION : Réduit la longueur des rubans noirs de sélection et les centre */
     div[data-testid="stSelectbox"], div[data-testid="stTimeInput"] {
         max-width: 750px !important;
         margin: 0 auto 15px auto !important;
     }
     
-    /* Correction des zones de saisie et textes de formulaires */
     div[data-testid="stTextInput"] input, div[data-testid="stTextArea"] textarea, div[data-testid="stNumberInput"] input {
         color: #111827 !important; background-color: #f3f4f6 !important; border: 2px solid #d1d5db !important;
     }
     
-    /* Force l'écriture des heures saisies en Noir Foncé sur fond clair */
     div[data-testid="stTimeInput"] input {
         color: #111827 !important; background-color: #f3f4f6 !important; font-weight: bold !important;
     }
     
-    /* FORCE l'écriture de TOUS les paragraphes de texte centraux en NOIR */
     div[data-testid="stMarkdownContainer"] p, label p {
         color: #111827 !important; font-family: 'Cambria', serif !important;
     }
     
-    /* Design de la barre latérale */
+    /* 3. DESIGN DE LA BARRE LATÉRALE */
     [data-testid="stSidebar"] { background-color: #f3f4f6 !important; border-right: 3px solid #f97316 !important; }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label p {
         font-family: 'Cambria', serif !important; font-size: 14px !important; font-weight: bold !important; color: #111827 !important;
     }
     [data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] { border-color: #f97316 !important; }
     
-    /* Design du bouton de validation */
+    /* 4. DESIGN DES BOUTONS DE VALIDATION (ORANGE) */
     div.stButton > button { background-color: #f97316 !important; border-radius: 8px !important; border: none !important; padding: 10px 24px !important; }
     div.stButton > button p { color: #ffffff !important; font-weight: bold !important; font-size: 14px !important; }
     div.stButton > button:hover { background-color: #ea580c !important; }
     
-    /* Bandeaux d'alertes */
+    /* BANDEAUX D'ALERTES */
     div[data-testid="stNotification"] { background-color: #f0fdf4 !important; border-left: 5px solid #16a34a !important; }
     .stAlert { background-color: #fff7ed !important; border-left: 5px solid #f97316 !important; }
     .stAlert p, .stAlert div, [data-testid="stNotification"] p { color: #1a1a1a !important; font-weight: 600 !important; font-size: 14px !important; }
     
-    /* Blocs statistiques (KPI) */
+    /* BLOCS STATISTIQUES (KPI) */
     .kpi-box {
         background-color: #ffffff; padding: 15px; border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e5e7eb; border-top: 4px solid #f97316;

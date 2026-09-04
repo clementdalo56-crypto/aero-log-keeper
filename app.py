@@ -179,7 +179,7 @@ else:
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("<p style='font-weight:bold; color:#f97316; font-size:13px;'>🗂️ MENUS DE LA STATION</p>", unsafe_allow_html=True)
-    choix_menu = st.sidebar.radio(
+        choix_menu = st.sidebar.radio(
         "Sélectionnez votre tâche :",
         [
             "⏰ Prise & Fin de Service",
@@ -197,12 +197,12 @@ else:
     heure_informatique = maintenant.strftime("%H:%M")
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
-       # --- SOUS-MENU : PRISE & FIN DE SERVICE ---
+    # --- SOUS-MENU : PRISE & FIN DE SERVICE ---
     if choix_menu == "⏰ Prise & Fin de Service":
         st.subheader("⏰ Registre de Présence (Montée / Descente)")
         with st.form("form_presence"):
             action = st.radio("Action :", ["Prise de service (Montée)", "Fin de service (Descente)"])
-            heure_action = st.time_input("Heure officielle :", maintenant.time())
+            heure_action = st.time_input("Heure officielle de l'action :", maintenant.time())
             if st.form_submit_button("💾 Valider l'Heure"):
                 df_p = pd.read_csv(FICHIER_AGENTS)
                 deja_signe = df_p[(df_p["Date"] == date_saisie) & (df_p["Agent"] == agent_actif) & (df_p["Action"] == action)]
@@ -220,9 +220,9 @@ else:
     # --- SOUS-MENU : SAISIE DES MESSAGES RÉGULIERS ---
     elif choix_menu == "📡 Saisie des Messages Réguliers":
         st.subheader("📡 Saisie des Messages Réguliers")
-        if agent_bloque: st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** est noté en fin de service.")
+        if agent_bloque: 
+            st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** est noté en fin de service.")
         else:
-            # STYLE DE SÉLECTION EN GRANDE LIGNE COMPACTE (Comme demandé dans l'image)
             st.markdown('<div class="form-container-custom">', unsafe_allow_html=True)
             col1, col2, col3, col4 = st.columns(4)
             with col1: n_agent_s = st.selectbox("Agent", [agent_actif])
@@ -236,8 +236,10 @@ else:
             
             if st.button("Transmettre le Message", use_container_width=True):
                 heure_def_str = heure_tr_txt.strip()
-                try: datetime.strptime(heure_def_str, "%H:%M")
-                except: st.error("❌ Format d'heure invalide (HH:MM)"); st.stop()
+                try: 
+                    datetime.strptime(heure_def_str, "%H:%M")
+                except: 
+                    st.error("❌ Format d'heure invalide (HH:MM)"); st.stop()
                 
                 if type_msg != "SPECI" and verifier_doublon_message(type_msg, date_saisie, heure_def_str):
                     st.error("❌ Un message identique existe déjà.")
@@ -258,9 +260,11 @@ else:
                     transmettre_message_outlook(f"[{type_msg}] San Pedro", corps_msg, ["beta@sodexam.ci"])
             st.markdown('</div>', unsafe_allow_html=True)
 
+    # --- SOUS-MENU : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
         st.subheader("🌡️ Saisie des Données Extrêmes")
-        if agent_bloque: st.error("🛑 Action bloquée.")
+        if agent_bloque: 
+            st.error("🛑 Action bloquée.")
         else:
             with st.form("form_ex"):
                 h_tr = st.text_input("Heure réelle transmission (HH:MM)", value=maintenant.strftime("%H:%M"))
@@ -280,6 +284,7 @@ else:
                     pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                     st.success("Données enregistrées.")
 
+    # --- SOUS-MENU : INSTRUMENTS ---
     elif choix_menu == "🛠️ Point Instrument & Correction":
         st.subheader("🛠️ Point Hebdomadaire des Instruments")
         with st.form("form_i"):
@@ -296,6 +301,7 @@ else:
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                 st.success("Rapport archivé.")
 
+    # --- SOUS-MENU : AGROMET & CLIMAT ---
     elif choix_menu == "🌱 AGROMET & CLIMAT":
         st.subheader("🌱 Rapports Décadaires AGROMET & Mensuels CLIMAT")
         with st.form("form_agro"):
@@ -313,6 +319,7 @@ else:
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                 st.success("Rapport validé.")
 
+    # --- SOUS-MENU : TCM ---
     elif choix_menu == "📂 Tableau Climatologique (TCM)":
         st.subheader("📂 Fichier Excel TCM")
         with st.form("form_tcm"):
@@ -328,6 +335,7 @@ else:
                 pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                 st.success("Excel archivé.")
 
+    # --- SOUS-MENU : OBSERVATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":
         st.subheader("📝 Cahier d'Observations de la Station")
         with st.form("form_obs"):
@@ -338,13 +346,13 @@ else:
                 df_o = pd.read_csv(FICHIER_OBS)
                 nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
-                st.success("Observation consignée.")
+                st.success("💾 Observation consignée dans le registre.")
 
-        elif choix_menu == "📈 Tableau de bord & Décomptes":
+    # --- SOUS-MENU : TABLEAU DE BORD & DÉCOMPTES ---
+    elif choix_menu == "📈 Tableau de bord & Décomptes":
         st.subheader("📊 Décompte des Messages Météo & Performance")
         df_stats = pd.read_csv(FICHIER_BDD)
         
-        # --- BLOC FILTRES SUPÉRIEURS PARFAITEMENT ALIGNÉS ---
         col_f1, col_f2, col_f3 = st.columns(3)
         with col_f1:
             liste_annees = sorted([str(a) for a in df_stats['Annee'].dropna().unique().tolist()]) if not df_stats.empty else [maintenant.strftime("%Y")]
@@ -359,7 +367,6 @@ else:
         with col_f3:
             agent_filtre = st.selectbox("👨‍💼 Filtrer par agent", ["Tous les agents"] + liste_agents)
 
-        # Extraction et filtrage des données
         if not df_stats.empty:
             df_temp = df_stats[df_stats["Annee"].astype(str) == str(annee_sel)]
             if mois_sel != "Tous": 
@@ -369,7 +376,6 @@ else:
         else:
             df_temp = pd.DataFrame()
 
-        # --- BLOC INDICATEURS DE PERFORMANCE EN LIGNE ---
         transmis = len(df_temp)
         dans_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis dans le délai"]) if not df_temp.empty else 0
         hors_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis hors délai"]) if not df_temp.empty else 0
@@ -466,57 +472,3 @@ else:
                     st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
             else: 
                 st.info("Aucune donnée d'agent sur cette période.")
-st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé pour ce type.")
-            
-            st.markdown("### 📊 Ventilation Visuelle")
-            c_g1, c_g2 = st.columns(2)
-            if not df_temp.empty:
-                with c_g1: st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
-                with c_g2: st.bar_chart(df_temp['Statut_Delai'].value_counts())
-
-        with tab_recap:
-            st.markdown("#### Tableau récapitulatif complet de la station")
-            if not df_temp.empty:
-                df_temp['ID'] = df_temp.index
-                st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
-                
-                col_e1, col_e2 = st.columns(2)
-                with col_e1:
-                    st.markdown("##### 📝 Corriger une ligne")
-                    id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1)
-                    if id_m in df_stats.index:
-                        with st.form("f_ed"):
-                            n_h = st.text_input("Heure transmission", value=str(df_stats.at[id_m, 'Heure_Transmission']))
-                            n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"])
-                            if st.form_submit_button("Sauvegarder"):
-                                df_stats.at[id_m, 'Heure_Transmission'] = n_h
-                                df_stats.at[id_m, 'Statut_Delai'] = n_s
-                                df_stats.to_csv(FICHIER_BDD, index=False)
-                                st.success("Mis à jour !"); st.rerun()
-                with col_e2:
-                    st.markdown("##### 🗑️ Supprimer une ligne")
-                    id_s = st.number_input("ID à supprimer :", min_value=0, max_value=10000, step=1)
-                    if st.button("Confirmer l'effacement", use_container_width=True):
-                        df_stats.drop(index=id_s).to_csv(FICHIER_BDD, index=False)
-                        st.success("Ligne retirée !"); st.rerun()
-            else: st.info("Aucun message enregistré pour cette période.")
-
-        with tab_podium:
-            st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
-            if not df_temp.empty:
-                stats_ag = []
-                for ag in df_temp["Agent"].unique():
-                    df_ag = df_temp[df_temp["Agent"] == ag]
-                    t_ag = len(df_ag)
-                    d_ag = len(df_ag[df_ag["Statut_Delai"] == "Transmis dans le délai"])
-                    tx = (d_ag / t_ag * 100) if t_ag > 0 else 0
-                    stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": round(tx, 1)})
-                
-                df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
-                df_cl.index += 1
-                st.dataframe(df_cl, use_container_width=True)
-                
-                for idx, row in df_cl.iterrows():
-                    med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
-                    st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
-            else: st.info("Aucune donnée d'agent sur cette période.")

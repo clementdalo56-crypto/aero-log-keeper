@@ -388,7 +388,7 @@ else:
 
 
 
-           with tab_decompte:
+        with tab_decompte:
         types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
         quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
         lignes_decompte = []

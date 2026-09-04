@@ -42,6 +42,7 @@ import {
   type MessageType,
   type Record as MeteoRecord,
 } from "@/lib/meteo";
+import { useRecords } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,7 +66,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const STORAGE_KEY = "meteo-records-v1";
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function Index() {

@@ -197,24 +197,27 @@ else:
     heure_informatique = maintenant.strftime("%H:%M")
     agent_bloque = verifier_si_agent_descendu(agent_actif, date_saisie)
 
-    # --- SÉCURISATION COMMUNE DES EXTRÊMES ET RAPPORTS ---
+       # --- SOUS-MENU : PRISE & FIN DE SERVICE ---
     if choix_menu == "⏰ Prise & Fin de Service":
         st.subheader("⏰ Registre de Présence (Montée / Descente)")
         with st.form("form_presence"):
             action = st.radio("Action :", ["Prise de service (Montée)", "Fin de service (Descente)"])
-])
             heure_action = st.time_input("Heure officielle :", maintenant.time())
             if st.form_submit_button("💾 Valider l'Heure"):
                 df_p = pd.read_csv(FICHIER_AGENTS)
                 deja_signe = df_p[(df_p["Date"] == date_saisie) & (df_p["Agent"] == agent_actif) & (df_p["Action"] == action)]
-                if not deja_signe.empty: st.error(f"❌ Action refusée : Déjà enregistré aujourd'hui.")
+                if not deja_signe.empty: 
+                    st.error("❌ Action refusée : Déjà enregistré aujourd'hui.")
                 else:
                     nouvelle_p = {"Date": date_saisie, "Agent": agent_actif, "Action": action, "Heure": heure_action.strftime("%H:%M")}
                     pd.concat([df_p, pd.DataFrame([nouvelle_p])], ignore_index=True).to_csv(FICHIER_AGENTS, index=False)
-                    st.success(f"✅ Présence enregistrée.")
+                    st.success("✅ Présence enregistrée avec succès.")
+                    st.rerun()
+        
         df_p_l = pd.read_csv(FICHIER_AGENTS)
         st.dataframe(df_p_l[df_p_l["Date"] == date_saisie], use_container_width=True)
 
+    # --- SOUS-MENU : SAISIE DES MESSAGES RÉGULIERS ---
     elif choix_menu == "📡 Saisie des Messages Réguliers":
         st.subheader("📡 Saisie des Messages Réguliers")
         if agent_bloque: st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** est noté en fin de service.")

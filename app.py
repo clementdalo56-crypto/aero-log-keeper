@@ -436,35 +436,38 @@ else:
 
 
 
-        with tab_recap:
+               with tab_recap:
             st.markdown("#### Tableau récapitulatif complet de la station")
             if not df_temp.empty:
                 df_temp['ID'] = df_temp.index
-                st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai"]])
-
+                # Affichage complet incluant la colonne "Details" pour lire le message rédigé
+                st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
+                
                 col_e1, col_e2 = st.columns(2)
                 with col_e1:
                     st.markdown("##### 📝 Corriger une ligne")
-                    id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1)
+                    id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1, key="id_correction_affichage")
                     if id_m in df_stats.index:
                         with st.form("f_ed"):
                             n_h = st.text_input("Heure transmission", value=str(df_stats.at[id_m, 'Heure_Transmission']))
-                            n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"])
+                            n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"], index=0 if df_stats.at[id_m, 'Statut_Delai'] == "Transmis dans le délai" else 1)
+                            n_det = st.text_area("Modifier le texte rédigé :", value=str(df_stats.at[id_m, 'Details']))
                             if st.form_submit_button("Sauvegarder"):
                                 df_stats.at[id_m, 'Heure_Transmission'] = n_h
                                 df_stats.at[id_m, 'Statut_Delai'] = n_s
-                                st.success("Ligne modifiée !")
+                                df_stats.at[id_m, 'Details'] = n_det
+                                df_stats.to_csv(FICHIER_BDD, index=False)
+                                st.success("Message et heure mis à jour avec succès !")
                                 st.rerun()
                 with col_e2:
                     st.markdown("##### 🗑️ Supprimer une ligne")
-                    id_s = st.number_input("ID à supprimer :", min_value=0, max_value=10000, step=1)
+                    id_s = st.number_input("ID à supprimer :", min_value=0, max_value=10000, step=1, key="id_suppression_affichage")
                     if st.button("Confirmer l'effacement", use_container_width=True):
-                        if id_s in df_stats.index:
-                            df_stats.drop(index=id_s).to_csv(FICHIER_BDD, index=False)
-                            st.success("Ligne retirée !")
-                            st.rerun()
-            else:
+                        df_stats.drop(index=id_s).to_csv(FICHIER_BDD, index=False)
+                        st.success("Ligne retirée !"); st.rerun()
+            else: 
                 st.info("Aucun message enregistré pour cette période.")
+
 
         with tab_podium:
             st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")

@@ -341,21 +341,21 @@ else:
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
                 st.success("💾 Observation consignée dans le registre.")
 
-            elif choix_menu == "📝 Qualité & Justifications Hors Délai":
-                st.subheader("📝 Cahier d'Observations de la Station")
-                with st.form("form_obs"):
-                    t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
-                    msg_c = st.text_input("Message concerné")
-                    expl = st.text_area("Explications")
-                    if st.form_submit_button("Enregistrer l'observation"):
-                        df_o = pd.read_csv(FICHIER_OBS)
-                        nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
-                        pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
-                        st.success("💾 Observation consignée dans le registre.")
+                elif choix_menu == "📝 Qualité & Justifications Hors Délai":
+        st.subheader("📝 Cahier d'Observations de la Station")
+        with st.form("form_obs"):
+            t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
+            msg_c = st.text_input("Message concerné")
+            expl = st.text_area("Explications")
+            if st.form_submit_button("Enregistrer l'Observation"):
+                df_o = pd.read_csv(FICHIER_OBS)
+                nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
+                pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
+                st.success("💾 Observation consignée dans le registre.")
 
     elif choix_menu == "📈 Tableau de bord & Décomptes":
-            st.subheader("📊 Décompte des Messages Météo & Performance")
-            df_stats = pd.read_csv(FICHIER_BDD)
+        st.subheader("📊 Décompte des Messages Météo & Performance")
+        df_stats = pd.read_csv(FICHIER_BDD)
         
         # --- BLOC FILTRES SUPÉRIEURS ---
         col_f1, col_f2, col_f3 = st.columns(3)
@@ -464,6 +464,27 @@ else:
                         st.rerun()
             else: 
                 st.info("Aucun message enregistré pour cette période.")
+
+        with tab_podium:
+            st.markdown("### 🏆 Performances et Classement des Agents")
+            if not df_temp.empty:
+                stats_ag = []
+                for ag in df_temp["Agent"].unique():
+                    df_ag = df_temp[df_temp["Agent"] == ag]
+                    t_ag = len(df_ag)
+                    d_ag = len(df_ag[df_ag["Statut_Delai"] == "Transmis dans le délai"])
+                    tx = (d_ag / t_ag * 100) if t_ag > 0 else 0
+                    stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": round(tx, 1)})
+                
+                df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
+                df_cl.index += 1
+                st.dataframe(df_cl, use_container_width=True)
+                
+                for idx, row in df_cl.iterrows():
+                    med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
+                    st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
+            else: 
+                st.info("Aucune donnée d'agent sur cette période.")
 
         with tab_podium:
             st.markdown("### 🏆 Performances et Classement des Agents")

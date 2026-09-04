@@ -126,7 +126,7 @@ def transmettre_message_outlook(sujet, corps, destinataires, fichier_joint=None)
         serveur.quit()
         return True
     except: return False
- tableau d'évaluation.*
+
 else:
     # --- MENUS DE LA BARRE LATÉRALE ---
     st.sidebar.markdown("<h2 style='color:#f97316; margin-bottom:0;'>🏢 SODEXAM</h2><p style='color:#16a34a; font-weight:bold; margin-top:0;'>Station de San Pedro</p>", unsafe_allow_html=True)

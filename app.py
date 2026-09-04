@@ -466,9 +466,9 @@ else:
                 st.info("Aucun message enregistré pour cette période.")
 
             with tab_podium:
-            st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
-            if not df_temp.empty:
-                stats_ag = []
+                    st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
+                if not df_temp.empty:
+                    stats_ag = []
                 for ag in df_temp["Agent"].unique():
                     df_ag = df_temp[df_temp["Agent"] == ag]
                     t_ag = len(df_ag)

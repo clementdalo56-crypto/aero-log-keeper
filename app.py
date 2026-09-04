@@ -354,8 +354,8 @@ else:
                         st.success("💾 Observation consignée dans le registre.")
 
         elif choix_menu == "📈 Tableau de bord & Décomptes":
-        st.subheader("📊 Décompte des Messages Météo & Performance")
-        df_stats = pd.read_csv(FICHIER_BDD)
+            st.subheader("📊 Décompte des Messages Météo & Performance")
+            df_stats = pd.read_csv(FICHIER_BDD)
         
         # --- BLOC FILTRES SUPÉRIEURS ---
         col_f1, col_f2, col_f3 = st.columns(3)

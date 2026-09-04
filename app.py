@@ -465,17 +465,23 @@ else:
             else: 
                 st.info("Aucun message enregistré pour cette période.")
 
-            with tab_podium:
-                    st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
-                    if not df_temp.empty:
-                        stats_ag = []
-                    for ag in df_temp["Agent"].unique():
-                                      df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
+                    with tab_podium:
+            st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
+            if not df_temp.empty:
+                stats_ag = []
+                for ag in df_temp["Agent"].unique():
+                    df_ag = df_temp[df_temp["Agent"] == ag]
+                    t_ag = len(df_ag)
+                    d_ag = len(df_ag[df_ag["Statut_Delai"] == "Transmis dans le délai"])
+                    tx = (d_ag / t_ag * 100) if t_ag > 0 else 0
+                    stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": round(tx, 1)})
+                
+                df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
                 df_cl.index += 1
                 st.dataframe(df_cl, use_container_width=True)
                 
                 for idx, row in df_cl.iterrows():
                     med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
                     st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
-            else: 
+            else:
                 st.info("Aucune donnée d'agent sur cette période.")

@@ -412,9 +412,7 @@ with tab_decompte:
         })
 
     st.table(pd.DataFrame(lignes_decompte))
-    st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
-
-            
+    st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")         
             st.markdown("### 📊 Ventilation Visuelle")
             c_g1, c_g2 = st.columns(2)
             if not df_temp.empty:

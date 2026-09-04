@@ -388,8 +388,12 @@ else:
             quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
             
             lignes_decompte = []
-            for tm in types_meteo:
+    # Ligne 391 : Votre boucle "for"
+for ... :  
+# Ligne 392 : Vous devez ajouter une indentation (généralement 4 espaces ou 1 touche Tab)
     if not df_temp.empty:
+        # Le reste de votre code sous le "if" doit aussi être indenté
+
         df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
     else:
         df_type = pd.DataFrame()

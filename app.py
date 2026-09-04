@@ -484,4 +484,4 @@ else:
                         med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
                         st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
                 else: 
-                st.info("Aucune donnée d'agent sur cette période.")
+                        st.info("Aucune donnée d'agent sur cette période.")

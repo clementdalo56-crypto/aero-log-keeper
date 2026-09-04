@@ -342,12 +342,12 @@ else:
                 st.success("💾 Observation consignée dans le registre.")
 
             elif choix_menu == "📝 Qualité & Justifications Hors Délai":
-                     st.subheader("📝 Cahier d'Observations de la Station")
+                st.subheader("📝 Cahier d'Observations de la Station")
                 with st.form("form_obs"):
-            t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
-            msg_c = st.text_input("Message concerné")
-            expl = st.text_area("Explications")
-                 if st.form_submit_button("Enregistrer l'Observation"):
+                t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
+                msg_c = st.text_input("Message concerné")
+                expl = st.text_area("Explications")
+                if st.form_submit_button("Enregistrer l'observation"):
                 df_o = pd.read_csv(FICHIER_OBS)
                 nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
@@ -382,7 +382,7 @@ else:
         else:
             df_temp = pd.DataFrame()
 
-        # --- BLOC INDICATEURS DE PERFORMANCE EN LIGNE ---
+        # --- BLOC INDICATEURS DE PERFORMANCE EN LIGNNE ---
         transmis = len(df_temp)
         dans_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis dans le délai"]) if not df_temp.empty else 0
         hors_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis hors délai"]) if not df_temp.empty else 0
@@ -397,7 +397,7 @@ else:
         tab_decompte, tab_recap, tab_podium = st.tabs(["📋 Décompte Réglementaire par type", "🗂️ Tableau Récapitulatif", "🏆 Classement des Agents"])
         
         with tab_decompte:
-            st.markdown(f"#### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
+            st.markdown("#### Décompte par type de message")
             types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
             quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
             
@@ -465,7 +465,7 @@ else:
             else: 
                 st.info("Aucun message enregistré pour cette période.")
 
-        with tab_podium:
+            with tab_podium:
             st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
             if not df_temp.empty:
                 stats_ag = []

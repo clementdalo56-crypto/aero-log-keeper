@@ -126,6 +126,7 @@ def transmettre_message_outlook(sujet, corps, destinataires, fichier_joint=None)
         serveur.quit()
         return True
     except: return False
+ tableau d'évaluation.*
 else:
     # --- MENUS DE LA BARRE LATÉRALE ---
     st.sidebar.markdown("<h2 style='color:#f97316; margin-bottom:0;'>🏢 SODEXAM</h2><p style='color:#16a34a; font-weight:bold; margin-top:0;'>Station de San Pedro</p>", unsafe_allow_html=True)
@@ -161,7 +162,8 @@ else:
             if st.form_submit_button("💾 Valider l'Heure"):
                 df_p = pd.read_csv(FICHIER_AGENTS)
                 deja_signe = df_p[(df_p["Date"] == date_saisie) & (df_p["Agent"] == agent_actif) & (df_p["Action"] == action)]
-                if not deja_signe.empty: st.error("❌ Action refusée : Déjà enregistré aujourd'hui.")
+                if not deja_signe.empty: 
+                    st.error("❌ Action refusée : Déjà enregistré aujourd'hui.")
                 else:
                     nouvelle_p = {"Date": date_saisie, "Agent": agent_actif, "Action": action, "Heure": heure_action.strftime("%H:%M")}
                     pd.concat([df_p, pd.DataFrame([nouvelle_p])], ignore_index=True).to_csv(FICHIER_AGENTS, index=False)
@@ -173,7 +175,8 @@ else:
     # --- SOUS-MENU : SAISIE DES MESSAGES RÉGULIERS ---
     elif choix_menu == "📡 Saisie des Messages Réguliers":
         st.subheader("📡 Saisie des Messages Réguliers")
-        if agent_bloque: st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** est noté en fin de service.")
+        if agent_bloque: 
+            st.error(f"🛑 Saisie refusée : L'agent **{agent_actif}** est noté en fin de service.")
         else:
             st.markdown('<div class="form-container-custom">', unsafe_allow_html=True)
             col1, col2, col3, col4 = st.columns(4)
@@ -188,8 +191,10 @@ else:
             
             if st.button("Transmettre le Message", use_container_width=True):
                 heure_def_str = heure_tr_txt.strip()
-                try: datetime.strptime(heure_def_str, "%H:%M")
-                except: st.error("❌ Format d'heure invalide (HH:MM)"); st.stop()
+                try: 
+                    datetime.strptime(heure_def_str, "%H:%M")
+                except: 
+                    st.error("❌ Format d'heure invalide (HH:MM)"); st.stop()
                 
                 if type_msg != "SPECI" and verifier_doublon_message(type_msg, date_saisie, heure_def_str):
                     st.error("❌ Un message identique existe déjà.")
@@ -213,7 +218,8 @@ else:
     # --- SOUS-MENU : DONNÉES EXTRÊMES ---
     elif choix_menu == "🌡️ Données Extrêmes":
         st.subheader("🌡️ Saisie des Données Extrêmes")
-        if agent_bloque: st.error("🛑 Action bloquée.")
+        if agent_bloque: 
+            st.error("🛑 Action bloquée.")
         else:
             with st.form("form_ex"):
                 h_tr = st.text_input("Heure réelle transmission (HH:MM)", value=maintenant.strftime("%H:%M"))
@@ -227,7 +233,7 @@ else:
                     nouvelle_ligne = {
                         "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": dt_d,
                         "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
-                        "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Transmission": h_tr.strip(),
+                        "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Transmission", "h_tr.strip()",
                         "Statut_Delai": statut, "Details": f"TMAX: {t_max} | TMIN: {t_min} | P: {p_mm}"
                     }
                     pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
@@ -278,13 +284,14 @@ else:
                 nouvelle_ligne = {
                     "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": date_saisie,
                     "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
-                    "Categorie": "TCM", "Type_Message_Fichier": "Fichier Excel TCM", "Heure_Transmission": heure_informatique,
-                        "Statut_Delai": "Transmis dans le délai", "Details": "Fichier Excel TCM déposé"
+                        "Heure_Transmission": heure_informatique,
+                        "Statut_Delai": "Transmis dans le délai", 
+                        "Details": "Fichier Excel TCM déposé"
                     }
                     pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)
                     st.success("Excel archivé.")
 
-    # --- SOUS-MENU : CAHIER D'OBSERVATIONS ---
+    # --- SOUS-MENU 7 : CAHIER D'OBSERVATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":
         st.subheader("📝 Cahier d'Observations de la Station")
         with st.form("form_obs"):
@@ -293,11 +300,16 @@ else:
             expl = st.text_area("Explications")
             if st.form_submit_button("Enregistrer l'Observation"):
                 df_o = pd.read_csv(FICHIER_OBS)
-                nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
+                nouvelle_o = {
+                    "Date": date_saisie, 
+                    "Heure": heure_informatique, 
+                    "Agent": agent_actif, 
+                    "Type_Observation": t_obs, 
+                    "Message_Concerne": msg_c, 
+                    "Raison_Retard_Ou_Qualite": expl
+                }
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
                 st.success("💾 Observation consignée dans le registre.")
-### SÉQUENCE 4 : Tableau de bord, Décomptes Réglementaires, Graphiques et Podium Agents
-*Cette dernière partie assemble la mise en page sous forme d'onglets compacts, inclut les graphiques dynamiques et génère le tableau d'évaluation.*
 
 ```python
     # --- SOUS-MENU : TABLEAU DE BORD (INTÉGRATION STRUCTURÉE DU MODÈLE) ---

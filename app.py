@@ -353,7 +353,7 @@ else:
                         pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
                         st.success("💾 Observation consignée dans le registre.")
 
-    elif choix_menu == "📈 Tableau de bord & Décomptes":
+        elif choix_menu == "📈 Tableau de bord & Décomptes":
         st.subheader("📊 Décompte des Messages Météo & Performance")
         df_stats = pd.read_csv(FICHIER_BDD)
         
@@ -382,7 +382,7 @@ else:
         else:
             df_temp = pd.DataFrame()
 
-        # --- BLOC INDICATEURS DE PERFORMANCE EN LIGNNE ---
+        # --- BLOC INDICATEURS DE PERFORMANCE EN LIGNE ---
         transmis = len(df_temp)
         dans_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis dans le délai"]) if not df_temp.empty else 0
         hors_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis hors délai"]) if not df_temp.empty else 0
@@ -465,8 +465,8 @@ else:
             else: 
                 st.info("Aucun message enregistré pour cette période.")
 
-                            with tab_podium:
-            st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
+        with tab_podium:
+            st.markdown("### 🏆 Performances et Classement des Agents")
             if not df_temp.empty:
                 stats_ag = []
                 for ag in df_temp["Agent"].unique():
@@ -483,6 +483,7 @@ else:
                 for idx, row in df_cl.iterrows():
                     med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
                     st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
-            else:
+            else: 
                 st.info("Aucune donnée d'agent sur cette période.")
+
 

@@ -423,26 +423,17 @@ with tab_decompte:
             st.bar_chart(df_temp['Statut_Delai'].value_counts())
 
                 
-                quota_th = quotas_reels[tm]
-                cnt_manquant = max(0, quota_th - cnt_transmis) if quota_th > 0 else 0
-                
-                pct_delai = f"{cnt_delai} ({(cnt_delai/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_delai}"
-                pct_hors = f"{cnt_hors} ({(cnt_hors/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_hors}"
-                pct_manq = f"{cnt_manquant} ({(cnt_manquant/quota_th*100):.1f}%)" if quota_th > 0 else "0"
-                
-                lignes_decompte.append({
-                    "Type de message": tm, "Attendus": quota_th,
-                    "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
-                })
-            
-            st.table(pd.DataFrame(lignes_decompte))
-            st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé pour ce type.")
-            
-            st.markdown("### 📊 Ventilation Visuelle")
-            c_g1, c_g2 = st.columns(2)
-            if not df_temp.empty:
-                with c_g1: st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
-                with c_g2: st.bar_chart(df_temp['Statut_Delai'].value_counts())
+                   st.table(pd.DataFrame(lignes_decompte))
+    st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
+    st.markdown("### 📊 Ventilation Visuelle")
+    
+    c_g1, c_g2 = st.columns(2)
+    if not df_temp.empty:
+        with c_g1: 
+            st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
+        with c_g2: 
+            st.bar_chart(df_temp['Statut_Delai'].value_counts())
+
 
         with tab_recap:
             st.markdown("#### Tableau récapitulatif complet de la station")

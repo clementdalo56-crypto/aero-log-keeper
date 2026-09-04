@@ -435,24 +435,23 @@ with tab_decompte:
             st.bar_chart(df_temp['Statut_Delai'].value_counts())
 
 
-        with tab_recap:
-            st.markdown("#### Tableau récapitulatif complet de la station")
-            if not df_temp.empty:
-                df_temp['ID'] = df_temp.index
-                st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
-                
-                col_e1, col_e2 = st.columns(2)
-                with col_e1:
-                    st.markdown("##### 📝 Corriger une ligne")
-                    id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1)
-                    if id_m in df_stats.index:
-                        with st.form("f_ed"):
-                            n_h = st.text_input("Heure transmission", value=str(df_stats.at[id_m, 'Heure_Transmission']))
-                            n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"])
-                            if st.form_submit_button("Sauvegarder"):
-                                df_stats.at[id_m, 'Heure_Transmission'] = n_h
-                                df_stats.at[id_m, 'Statut_Delai'] = n_s
-                                df_stats.to_csv(FICHIER_BDD, index=False)
+           with tab_recap:
+        st.markdown("#### Tableau récapitulatif complet de la station")
+        if not df_temp.empty:
+            df_temp['ID'] = df_temp.index
+            st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai"]])
+
+            col_e1, col_e2 = st.columns(2)
+            with col_e1:
+                st.markdown("##### 📝 Corriger une ligne")
+                id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1)
+                if id_m in df_stats.index:
+                    with st.form("f_ed"):
+                        n_h = st.text_input("Heure transmission", value=str(df_stats.at[id_m, 'Heure_Transmission']))
+                        n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"])
+                        if st.form_submit_button("Sauvegarder"):
+                            df_stats.at[id_m, 'Heure_Transmission'] = n_h
+                            df_stats.at[id_m, 'Statut_Delai'] = n_s
                                 st.success("Mis à jour !")
                                 st.rerun()
                 with col_e2:

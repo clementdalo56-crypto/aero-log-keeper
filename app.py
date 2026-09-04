@@ -411,21 +411,16 @@ with tab_decompte:
             "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
         })
 
-    st.table(pd.DataFrame(lignes_decompte))
-    st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")         
+        st.table(pd.DataFrame(lignes_decompte))
+    st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
     st.markdown("### 📊 Ventilation Visuelle")
-            c_g1, c_g2 = st.columns(2)
-            if not df_temp.empty:
-                with c_g1: st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
-                with c_g2: st.bar_chart(df_temp['Statut_Delai'].value_counts())
-        
-        [df_temp["Type_Message_Fichier"] == tm]
-    else:
-        df_type = pd.DataFrame()
-
-    cnt_transmis = len(df_type)
-    cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"]) if not df_type.empty else 0
-    cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"]) if not df_type.empty else 0
+    
+    c_g1, c_g2 = st.columns(2)
+    if not df_temp.empty:
+        with c_g1: 
+            st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
+        with c_g2: 
+            st.bar_chart(df_temp['Statut_Delai'].value_counts())
 
                 
                 quota_th = quotas_reels[tm]

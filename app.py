@@ -410,7 +410,15 @@ else:
                     "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
                 })
 
-            st.table(pd.DataFrame(lignes_decompte))
+                        s# Crée le DataFrame à partir de vos données
+            df_affichage = pd.DataFrame(lignes_decompte)
+
+            # Applique une couleur de texte jaune foncé (DarkGoldenRod ou un code Hex) à toutes les cellules
+            df_style = df_affichage.style.map(lambda x: 'color: #D4AF37; font-weight: bold;')
+
+            # Affiche le tableau stylisé
+            st.table(df_style)
+
             st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
             st.markdown("### 📊 Ventilation Visuelle")
             

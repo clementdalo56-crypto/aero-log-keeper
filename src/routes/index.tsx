@@ -69,7 +69,7 @@ const STORAGE_KEY = "meteo-records-v1";
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function Index() {
-  const [records, setRecords] = useState<MeteoRecord[]>([]);
+  const [records, setRecords] = useRecords();
   const [agent, setAgent] = useState<Agent | "">("");
   const [type, setType] = useState<MessageType | "">("");
   const [hour, setHour] = useState<string>("");

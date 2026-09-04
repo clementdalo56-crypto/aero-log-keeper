@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, CloudSun, Clock, Timer } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CloudSun,
+  Clock,
+  Pencil,
+  Timer,
+  Trash2,
+  X,
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,10 +48,15 @@ import {
   hourRuleLabel,
   isHourValid,
   pad,
+  findDuplicate,
+  frToIso,
+  isoToFr,
+  todayIso,
   type Agent,
   type MessageType,
   type Record as MeteoRecord,
 } from "@/lib/meteo";
+import { useRecords } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,11 +80,11 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const STORAGE_KEY = "meteo-records-v1";
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function Index() {
-  const [records, setRecords] = useState<MeteoRecord[]>([]);
+  const [records, setRecords] = useRecords();
   const [agent, setAgent] = useState<Agent | "">("");
   const [type, setType] = useState<MessageType | "">("");
   const [hour, setHour] = useState<string>("");
@@ -77,6 +92,9 @@ function Index() {
   const [transmitTime, setTransmitTime] = useState<string>("");
   const [serviceStart, setServiceStart] = useState<string>("");
   const [serviceEnd, setServiceEnd] = useState<string>("");
+  const [dateIso, setDateIso] = useState<string>("");
+  const [body, setBody] = useState<string>("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [period, setPeriod] = useState<Period>("day");
   const [now, setNow] = useState<Date | null>(null);
@@ -84,18 +102,8 @@ function Index() {
   useEffect(() => {
     setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setRecords(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  }, [records]);
 
   const hourNum = hour === "" ? null : Number(hour);
   const minuteNum = Number(minute || 0);

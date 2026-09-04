@@ -415,10 +415,27 @@ else:
                 "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
             })
 
+                # Génération du tableau au format HTML pour forcer la couleur jaune
         df_affichage = pd.DataFrame(lignes_decompte)
-        st.table(df_affichage.style.map(lambda x: 'color: #D4AF37; font-weight: bold;'))
+        html_table = df_affichage.to_html(index=False)
+        
+        # Injection du CSS pour garantir les écritures en jaune foncé
+        st.markdown(f"""
+            <style>
+                table {{
+                    color: #D4AF37 !important;
+                    font-weight: bold;
+                    width: 100%;
+                    border-collapse: collapse;
+                }}
+                th {{
+                    color: #ffffff !important;
+                    background-color: #1e3d33;
+                }}
+            </style>
+            {html_table}
+            """, unsafe_allow_html=True)
 
-        st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
         st.markdown("### 📊 Ventilation Visuelle")
         
         c_g1, c_g2 = st.columns(2)

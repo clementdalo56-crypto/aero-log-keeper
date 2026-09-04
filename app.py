@@ -344,14 +344,14 @@ else:
             elif choix_menu == "📝 Qualité & Justifications Hors Délai":
                 st.subheader("📝 Cahier d'Observations de la Station")
                 with st.form("form_obs"):
-                t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
-                msg_c = st.text_input("Message concerné")
-                expl = st.text_area("Explications")
-                if st.form_submit_button("Enregistrer l'observation"):
-                df_o = pd.read_csv(FICHIER_OBS)
-                nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
-                pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
-                st.success("💾 Observation consignée dans le registre.")
+                    t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
+                    msg_c = st.text_input("Message concerné")
+                    expl = st.text_area("Explications")
+                    if st.form_submit_button("Enregistrer l'observation"):
+                        df_o = pd.read_csv(FICHIER_OBS)
+                        nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}
+                        pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
+                        st.success("💾 Observation consignée dans le registre.")
 
     elif choix_menu == "📈 Tableau de bord & Décomptes":
         st.subheader("📊 Décompte des Messages Météo & Performance")

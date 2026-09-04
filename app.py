@@ -389,10 +389,15 @@ else:
             
             lignes_decompte = []
             for tm in types_meteo:
-                df_type = df_temp[df_temp["Type_Message_Fichier"] == tm] if not df_temp.empty else pd.DataFrame()
-                cnt_transmis = len(df_type)
-                cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"])
-                cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"])
+    if not df_temp.empty:
+        df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
+    else:
+        df_type = pd.DataFrame()
+
+    cnt_transmis = len(df_type)
+    cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"]) if not df_type.empty else 0
+    cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"]) if not df_type.empty else 0
+
                 
                 quota_th = quotas_reels[tm]
                 cnt_manquant = max(0, quota_th - cnt_transmis) if quota_th > 0 else 0

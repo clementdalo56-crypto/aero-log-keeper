@@ -341,11 +341,11 @@ else:
                 pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
                 st.success("💾 Observation consignée dans le registre.")
 
-    # --- SOUS-MENU : TABLEAU DE BORD & DÉCOMPTES ---
-    elif choix_menu == "📈 Tableau de bord & Décomptes":
+        elif choix_menu == "📈 Tableau de bord & Décomptes":
         st.subheader("📊 Décompte des Messages Météo & Performance")
         df_stats = pd.read_csv(FICHIER_BDD)
         
+        # --- BLOC FILTRES SUPÉRIEURS ---
         col_f1, col_f2, col_f3 = st.columns(3)
         with col_f1:
             liste_annees = sorted([str(a) for a in df_stats['Annee'].dropna().unique().tolist()]) if not df_stats.empty else [maintenant.strftime("%Y")]
@@ -360,6 +360,7 @@ else:
         with col_f3:
             agent_filtre = st.selectbox("👨‍💼 Filtrer par agent", ["Tous les agents"] + liste_agents)
 
+        # Extraction et filtrage des données
         if not df_stats.empty:
             df_temp = df_stats[df_stats["Annee"].astype(str) == str(annee_sel)]
             if mois_sel != "Tous": 
@@ -369,6 +370,7 @@ else:
         else:
             df_temp = pd.DataFrame()
 
+        # --- BLOC INDICATEURS DE PERFORMANCE EN LIGNE ---
         transmis = len(df_temp)
         dans_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis dans le délai"]) if not df_temp.empty else 0
         hors_delai = len(df_temp[df_temp["Statut_Delai"] == "Transmis hors délai"]) if not df_temp.empty else 0
@@ -379,65 +381,50 @@ else:
         with k2: st.markdown(f'<div class="kpi-box" style="border-top-color:#16a34a;"><div class="kpi-title">DANS LE DÉLAI</div><div class="kpi-value" style="color:#16a34a;">{dans_delai}</div></div>', unsafe_allow_html=True)
         with k3: st.markdown(f'<div class="kpi-box" style="border-top-color:#ef4444;"><div class="kpi-title">HORS DÉLAI</div><div class="kpi-value" style="color:#ef4444;">{hors_delai}</div></div>', unsafe_allow_html=True)
         with k4: st.markdown(f'<div class="kpi-box" style="border-top-color:#06b6d4;"><div class="kpi-title">TAUX DE PONCTUALITÉ</div><div class="kpi-value" style="color:#06b6d4;">{taux_ponct:.0f}%</div></div>', unsafe_allow_html=True)
-        
-        
-        
-        
-        tab_decompte, tab_recap, tab_podium = st.tabs(["📝 Décompte Réglementaire par type", "📊 Tableau Récapitulatif", "🏆 Classement des Agents"])
-        
 
-
-
+        tab_decompte, tab_recap, tab_podium = st.tabs(["📋 Décompte Réglementaire par type", "🗂️ Tableau Récapitulatif", "🏆 Classement des Agents"])
+        
         with tab_decompte:
+            st.markdown(f"#### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
             types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
             quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
+            
             lignes_decompte = []
-
-        for tm in types_meteo:
+            for tm in types_meteo:
+                if not df_temp.empty:
+                    df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
+                else:
+                    df_type = pd.DataFrame()
+                    
+                cnt_transmis = len(df_type)
+                cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"]) if not df_type.empty else 0
+                cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"]) if not df_type.empty else 0
+                
+                quota_th = quotas_reels[tm]
+                cnt_manquant = max(0, quota_th - cnt_transmis) if quota_th > 0 else 0
+                
+                pct_delai = f"{cnt_delai} ({(cnt_delai/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_delai}"
+                pct_hors = f"{cnt_hors} ({(cnt_hors/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_hors}"
+                pct_manq = f"{cnt_manquant} ({(cnt_manquant/quota_th*100):.1f}%)" if quota_th > 0 else "0"
+                
+                lignes_decompte.append({
+                    "Type de message": tm, "Attendus": quota_th,
+                    "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
+                })
+            
+            st.table(pd.DataFrame(lignes_decompte))
+            st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé pour ce type.")
+            
+            st.markdown("### 📊 Ventilation Visuelle")
+            c_g1, c_g2 = st.columns(2)
             if not df_temp.empty:
-                df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
-            else:
-                df_type = pd.DataFrame()
+                with c_g1: st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
+                with c_g2: st.bar_chart(df_temp['Statut_Delai'].value_counts())
 
-            cnt_transmis = len(df_type)
-            cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"]) if not df_type.empty else 0
-            cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"]) if not df_type.empty else 0
-
-            quota_th = quotas_reels[tm]
-            cnt_manquant = max(0, quota_th - cnt_transmis) if quota_th > 0 else 0
-
-            pct_delai = f"{cnt_delai} ({(cnt_delai/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_delai}"
-            pct_hors = f"{cnt_hors} ({(cnt_hors/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_hors}"
-            pct_manq = f"{cnt_manquant} ({(cnt_manquant/quota_th*100):.1f}%)" if quota_th > 0 else "0"
-
-            lignes_decompte.append({
-                "Type de message": tm, "Attendus": quota_th,
-                "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
-            })
-
-                # Génération du tableau au format HTML pour forcer la couleur jaune
-                # Affichage du tableau natif avec style jaune or forcé
-        df_affichage = pd.DataFrame(lignes_decompte)
-        st.dataframe(
-            df_affichage.style.map(lambda x: 'color: #FFD700; font-weight: bold;'),
-            use_container_width=True,
-            hide_index=True
-        )
-
-
-        st.markdown("### 📊 Ventilation Visuelle")
-        
-        c_g1, c_g2 = st.columns(2)
-        if not df_temp.empty:
-            with c_g1: 
-                st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
-            with c_g2: 
-                st.bar_chart(df_temp['Statut_Delai'].value_counts())
-            with tab_recap:
+        with tab_recap:
             st.markdown("#### Tableau récapitulatif complet de la station")
             if not df_temp.empty:
                 df_temp['ID'] = df_temp.index
-                # Affichage complet incluant la colonne "Details" pour lire le message rédigé
                 st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]], use_container_width=True)
                 
                 col_e1, col_e2 = st.columns(2)
@@ -454,17 +441,17 @@ else:
                                 df_stats.at[id_m, 'Statut_Delai'] = n_s
                                 df_stats.at[id_m, 'Details'] = n_det
                                 df_stats.to_csv(FICHIER_BDD, index=False)
-                                st.success("Message et heure mis à jour avec succès !")
+                                st.success("Message mis à jour !")
                                 st.rerun()
                 with col_e2:
                     st.markdown("##### 🗑️ Supprimer une ligne")
                     id_s = st.number_input("ID à supprimer :", min_value=0, max_value=10000, step=1, key="id_suppression_affichage")
                     if st.button("Confirmer l'effacement", use_container_width=True):
                         df_stats.drop(index=id_s).to_csv(FICHIER_BDD, index=False)
-                        st.success("Ligne retirée !"); st.rerun()
+                        st.success("Ligne retirée !")
+                        st.rerun()
             else: 
                 st.info("Aucun message enregistré pour cette période.")
-
 
         with tab_podium:
             st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
@@ -475,7 +462,7 @@ else:
                     t_ag = len(df_ag)
                     d_ag = len(df_ag[df_ag["Statut_Delai"] == "Transmis dans le délai"])
                     tx = (d_ag / t_ag * 100) if t_ag > 0 else 0
-                    stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": tx})
+                    stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": round(tx, 1)})
                 
                 df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
                 df_cl.index += 1
@@ -483,7 +470,6 @@ else:
                 
                 for idx, row in df_cl.iterrows():
                     med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
-                    st.markdown(f"<div class='podium-box'><b>{med}</b> : {row['Agent']} - Efficacité : {row['Taux de réussite (%)']:.1f}%</div>", unsafe_allow_html=True)
-            else:
+                    st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
+            else: 
                 st.info("Aucune donnée d'agent sur cette période.")
-

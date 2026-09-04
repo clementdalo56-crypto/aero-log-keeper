@@ -127,6 +127,52 @@ def transmettre_message_outlook(sujet, corps, destinataires, fichier_joint=None)
         return True
     except: return False
 
+# --- ARCHIVES INITIALISATION ---
+colonnes_principales = ["Date_Saisie", "Heure_Saisie", "Date_Donnees", "Mois", "Annee", "Agent", "Categorie", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai", "Details"]
+if not os.path.exists(FICHIER_BDD): pd.DataFrame(columns=colonnes_principales).to_csv(FICHIER_BDD, index=False)
+if not os.path.exists(FICHIER_AGENTS): pd.DataFrame(columns=["Date", "Agent", "Action", "Heure"]).to_csv(FICHIER_AGENTS, index=False)
+if not os.path.exists(FICHIER_OBS): pd.DataFrame(columns=["Date", "Heure", "Agent", "Type_Observation", "Message_Concerne", "Raison_Retard_Ou_Qualite"]).to_csv(FICHIER_OBS, index=False)
+
+def verifier_si_agent_descendu(agent, date_du_jour):
+    df_p = pd.read_csv(FICHIER_AGENTS)
+    if not df_p.empty:
+        descente = df_p[(df_p["Date"] == date_du_jour) & (df_p["Agent"] == agent) & (df_p["Action"] == "Fin de service (Descente)")]
+        if not descente.empty: return True
+    return False
+
+def verifier_doublon_message(type_msg, date_data, heure_str):
+    df_b = pd.read_csv(FICHIER_BDD)
+    if not df_b.empty:
+        doublon = df_b[(df_b["Type_Message_Fichier"] == type_msg) & (df_b["Date_Donnees"] == date_data) & (df_b["Heure_Transmission"] == heure_str)]
+        if not doublon.empty: return True
+    return False
+
+# --- ALERTE ET BIP HEURE RONDE ---
+maintenant = datetime.now()
+minute_actuelle = maintenant.minute
+
+if 50 <= minute_actuelle <= 59 or minute_actuelle == 0:
+    st.warning(f"⚠️ RAPPEL DE SERVICE : Il est {maintenant.strftime('%H:%M')}. La fenêtre de saisie réglementaire est active !")
+    st.markdown("""<audio autoplay><source src="https://mixkit.co" type="audio/mpeg"></audio>""", unsafe_allow_html=True)
+
+# --- SÉCURITÉ ACCÈS ---
+if "authentifie" not in st.session_state: st.session_state["authentifie"] = False
+
+if not st.session_state["authentifie"]:
+    col_gauche, col_centre, col_droite = st.columns(3)
+    with col_centre:
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: #f97316; margin-bottom:0;'>🏢 SODEXAM</h1>", unsafe_allow_html=True)
+        st.markdown("<h3 style='text-align: center; color: #16a34a; margin-top:0;'>Station de San Pedro</h3>", unsafe_allow_html=True)
+        st.markdown("---")
+        mdp_saisi = st.text_input("🔑 Entrez le code d'accès de la station :", type="password")
+        if st.button("Se connecter à l'application", use_container_width=True):
+            if mdp_saisi == MOT_DE_PASSE_REQUIS:
+                st.session_state["authentifie"] = True
+                st.rerun()
+            else: st.error("❌ Mot de passe incorrect")
+
+
 else:
     # --- MENUS DE LA BARRE LATÉRALE ---
     st.sidebar.markdown("<h2 style='color:#f97316; margin-bottom:0;'>🏢 SODEXAM</h2><p style='color:#16a34a; font-weight:bold; margin-top:0;'>Station de San Pedro</p>", unsafe_allow_html=True)

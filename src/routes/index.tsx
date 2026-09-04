@@ -92,6 +92,9 @@ function Index() {
   const [transmitTime, setTransmitTime] = useState<string>("");
   const [serviceStart, setServiceStart] = useState<string>("");
   const [serviceEnd, setServiceEnd] = useState<string>("");
+  const [dateIso, setDateIso] = useState<string>("");
+  const [body, setBody] = useState<string>("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [period, setPeriod] = useState<Period>("day");
   const [now, setNow] = useState<Date | null>(null);

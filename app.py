@@ -416,25 +416,14 @@ else:
             })
 
                 # Génération du tableau au format HTML pour forcer la couleur jaune
+                # Affichage du tableau natif avec style jaune or forcé
         df_affichage = pd.DataFrame(lignes_decompte)
-        html_table = df_affichage.to_html(index=False)
-        
-        # Injection du CSS pour garantir les écritures en jaune foncé
-        st.markdown(f"""
-            <style>
-                table {{
-                    color: #D4AF37 !important;
-                    font-weight: bold;
-                    width: 100%;
-                    border-collapse: collapse;
-                }}
-                th {{
-                    color: #ffffff !important;
-                    background-color: #1e3d33;
-                }}
-            </style>
-            {html_table}
-            """, unsafe_allow_html=True)
+        st.dataframe(
+            df_affichage.style.map(lambda x: 'color: #FFD700; font-weight: bold;'),
+            use_container_width=True,
+            hide_index=True
+        )
+
 
         st.markdown("### 📊 Ventilation Visuelle")
         

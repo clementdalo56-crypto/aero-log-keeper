@@ -433,10 +433,7 @@ else:
                 st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
             with c_g2: 
                 st.bar_chart(df_temp['Statut_Delai'].value_counts())
-
-
-
-               with tab_recap:
+            with tab_recap:
             st.markdown("#### Tableau récapitulatif complet de la station")
             if not df_temp.empty:
                 df_temp['ID'] = df_temp.index

@@ -465,7 +465,7 @@ else:
             else: 
                 st.info("Aucun message enregistré pour cette période.")
 
-                    with tab_podium:
+                            with tab_podium:
             st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
             if not df_temp.empty:
                 stats_ag = []
@@ -485,3 +485,4 @@ else:
                     st.markdown(f'<div class="podium-box"><b>{med} : {row["Agent"]}</b> — Efficacité : <b>{row["Taux de réussite (%)"]}%</b></div>', unsafe_allow_html=True)
             else:
                 st.info("Aucune donnée d'agent sur cette période.")
+

@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, CloudSun, Clock, Timer } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CloudSun,
+  Clock,
+  Pencil,
+  Timer,
+  Trash2,
+  X,
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +48,10 @@ import {
   hourRuleLabel,
   isHourValid,
   pad,
+  findDuplicate,
+  frToIso,
+  isoToFr,
+  todayIso,
   type Agent,
   type MessageType,
   type Record as MeteoRecord,
@@ -78,6 +92,9 @@ function Index() {
   const [transmitTime, setTransmitTime] = useState<string>("");
   const [serviceStart, setServiceStart] = useState<string>("");
   const [serviceEnd, setServiceEnd] = useState<string>("");
+  const [dateIso, setDateIso] = useState<string>("");
+  const [body, setBody] = useState<string>("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [period, setPeriod] = useState<Period>("day");
   const [now, setNow] = useState<Date | null>(null);

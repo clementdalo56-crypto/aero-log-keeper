@@ -382,9 +382,8 @@ else:
 
        
        crtab_decompte, tab_recap, tab_podium = st.tabs(["📝 Décompte Réglementaire par type", "📊 Tableau Récapitulatif", "🏆 Classement des Agents"])
-
-with tab_decompte:
-    st.markdown(f"##### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
+      with tab_decompte:
+     st.markdown(f"##### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
     types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
     quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
 

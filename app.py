@@ -409,10 +409,9 @@ else:
                     "Type de message": tm, "Attendus": quota_th,
                     "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
                 })
-                # Affichage du tableau stylisé en jaune or
+                        # Affichage du tableau stylisé en jaune or (compatible toutes versions)
                 df_affichage = pd.DataFrame(lignes_decompte)
-                st.table(df_affichage.style.applymap(lambda x: 'color: #D4AF37; font-weight: bold;'))
-
+                st.table(df_affichage.style.map(lambda x: 'color: #D4AF37; font-weight: bold;'))
                 st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
                 st.markdown("### 📊 Ventilation Visuelle")
 

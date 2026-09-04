@@ -380,12 +380,12 @@ else:
         with k3: st.markdown(f'<div class="kpi-box" style="border-top-color:#ef4444;"><div class="kpi-title">HORS DÉLAI</div><div class="kpi-value" style="color:#ef4444;">{hors_delai}</div></div>', unsafe_allow_html=True)
         with k4: st.markdown(f'<div class="kpi-box" style="border-top-color:#06b6d4;"><div class="kpi-title">TAUX DE PONCTUALITÉ</div><div class="kpi-value" style="color:#06b6d4;">{taux_ponct:.0f}%</div></div>', unsafe_allow_html=True)
         tab_decompte, tab_recap, tab_podium = st.tabs(["📝 Décompte Réglementaire par type", "📊 Tableau Récapitulatif", "🏆 Classement des Agents"])
-      with tab_decompte:
-     st.markdown(f"##### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
-    types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
-    quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
+        with tab_decompte:
+        st.markdown(f"##### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
+        types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
+        quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
 
-    lignes_decompte = []
+        lignes_decompte = []
 
     for tm in types_meteo:
         if not df_temp.empty:

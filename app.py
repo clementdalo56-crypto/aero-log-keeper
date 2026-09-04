@@ -353,7 +353,7 @@ else:
                         pd.concat([df_o, pd.DataFrame([nouvelle_o])], ignore_index=True).to_csv(FICHIER_OBS, index=False)
                         st.success("💾 Observation consignée dans le registre.")
 
-        elif choix_menu == "📈 Tableau de bord & Décomptes":
+    elif choix_menu == "📈 Tableau de bord & Décomptes":
             st.subheader("📊 Décompte des Messages Météo & Performance")
             df_stats = pd.read_csv(FICHIER_BDD)
         

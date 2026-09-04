@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as ObservationsRouteImport } from './routes/observations'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ImportRoute = ImportRouteImport.update({
   path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObservationsRoute = ObservationsRouteImport.update({
+  id: '/observations',
+  path: '/observations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
+  '/observations': typeof ObservationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
+  '/observations': typeof ObservationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/agents': typeof AgentsRoute
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
+  '/observations': typeof ObservationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/historique' | '/import'
+  fullPaths: '/' | '/agents' | '/historique' | '/import' | '/observations'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/historique' | '/import'
-  id: '__root__' | '/' | '/agents' | '/historique' | '/import'
+  to: '/' | '/agents' | '/historique' | '/import' | '/observations'
+  id: '__root__' | '/' | '/agents' | '/historique' | '/import' | '/observations'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   AgentsRoute: typeof AgentsRoute
   HistoriqueRoute: typeof HistoriqueRoute
   ImportRoute: typeof ImportRoute
+  ObservationsRoute: typeof ObservationsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/observations': {
+      id: '/observations'
+      path: '/observations'
+      fullPath: '/observations'
+      preLoaderRoute: typeof ObservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsRoute: AgentsRoute,
   HistoriqueRoute: HistoriqueRoute,
   ImportRoute: ImportRoute,
+  ObservationsRoute: ObservationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

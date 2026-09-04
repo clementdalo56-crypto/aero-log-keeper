@@ -116,10 +116,22 @@ function ImportPage() {
       const type = matchType(cells[iType] ?? "");
       const msg = parseTime(cells[iHour] ?? "");
       const tx = parseTime(cells[iTx] ?? "");
-      if (!agent) return errors.push(`Ligne ${i + 2} : agent inconnu.`);
-      if (!type) return errors.push(`Ligne ${i + 2} : type de message inconnu.`);
-      if (!msg) return errors.push(`Ligne ${i + 2} : heure du message invalide.`);
-      if (!tx) return errors.push(`Ligne ${i + 2} : heure de transmission invalide.`);
+      if (!agent) {
+        errors.push(`Ligne ${i + 2} : agent inconnu.`);
+        return;
+      }
+      if (!type) {
+        errors.push(`Ligne ${i + 2} : type de message inconnu.`);
+        return;
+      }
+      if (!msg) {
+        errors.push(`Ligne ${i + 2} : heure du message invalide.`);
+        return;
+      }
+      if (!tx) {
+        errors.push(`Ligne ${i + 2} : heure de transmission invalide.`);
+        return;
+      }
 
       const { status } = computeStatus(msg.h, msg.m, tx.h, tx.m);
       const d = deadlineFrom(msg.h, msg.m);

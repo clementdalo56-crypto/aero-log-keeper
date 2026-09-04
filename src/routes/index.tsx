@@ -42,6 +42,7 @@ import {
   type MessageType,
   type Record as MeteoRecord,
 } from "@/lib/meteo";
+import { useRecords } from "@/lib/store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -65,11 +66,11 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const STORAGE_KEY = "meteo-records-v1";
+
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 function Index() {
-  const [records, setRecords] = useState<MeteoRecord[]>([]);
+  const [records, setRecords] = useRecords();
   const [agent, setAgent] = useState<Agent | "">("");
   const [type, setType] = useState<MessageType | "">("");
   const [hour, setHour] = useState<string>("");
@@ -84,18 +85,8 @@ function Index() {
   useEffect(() => {
     setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setRecords(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
     return () => clearInterval(id);
   }, []);
-
-  useEffect(() => {
-    if (records.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  }, [records]);
 
   const hourNum = hour === "" ? null : Number(hour);
   const minuteNum = Number(minute || 0);

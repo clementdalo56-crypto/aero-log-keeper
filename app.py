@@ -342,11 +342,11 @@ else:
                 st.success("💾 Observation consignée dans le registre.")
 
                 elif choix_menu == "📝 Qualité & Justifications Hors Délai":
-        st.subheader("📝 Cahier d'Observations de la Station")
-        with st.form("form_obs"):
-            t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
-            msg_c = st.text_input("Message concerné")
-            expl = st.text_area("Explications")
+                    st.subheader("📝 Cahier d'Observations de la Station")
+                    with st.form("form_obs"):
+                        t_obs = st.selectbox("Nature", ["Raison de transmission Hors Délai", "Message non transmis (Manquant)", "Note sur la Qualité"])
+                        msg_c = st.text_input("Message concerné")
+                        expl = st.text_area("Explications")
             if st.form_submit_button("Enregistrer l'Observation"):
                 df_o = pd.read_csv(FICHIER_OBS)
                 nouvelle_o = {"Date": date_saisie, "Heure": heure_informatique, "Agent": agent_actif, "Type_Observation": t_obs, "Message_Concerne": msg_c, "Raison_Retard_Ou_Qualite": expl}

@@ -388,8 +388,9 @@ else:
             quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
             
             lignes_decompte = []
-            for tm in types_meteo:
-                if not df_temp.empty:
+            # Exemple si vous parcourez une liste de données :
+for item in liste_de_donnees:  
+    if not df_temp.empty:
                     df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
                 else:
                     df_type = pd.DataFrame()

@@ -404,72 +404,71 @@ else:
             pct_delai = f"{cnt_delai} ({(cnt_delai/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_delai}"
             pct_hors = f"{cnt_hors} ({(cnt_hors/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_hors}"
             pct_manq = f"{cnt_manquant} ({(cnt_manquant/quota_th*100):.1f}%)" if quota_th > 0 else "0"
-
+            
             lignes_decompte.append({
                 "Type de message": tm, "Attendus": quota_th,
                 "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
             })
 
+        st.table(pd.DataFrame(lignes_decompte))
+        st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
+        st.markdown("### 📊 Ventilation Visuelle")
+        
+        c_g1, c_g2 = st.columns(2)
+        if not df_temp.empty:
+            with c_g1: 
+                st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
+            with c_g2: 
+                st.bar_chart(df_temp['Statut_Delai'].value_counts())
 
-    st.table(pd.DataFrame(lignes_decompte))
-    st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
-    st.markdown("### 📊 Ventilation Visuelle")
-    
-    c_g1, c_g2 = st.columns(2)
-    if not df_temp.empty:
-        with c_g1: 
-            st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
-        with c_g2: 
-            st.bar_chart(df_temp['Statut_Delai'].value_counts())
+    with tab_recap:
+        st.markdown("#### Tableau récapitulatif complet de la station")
+        if not df_temp.empty:
+            df_temp['ID'] = df_temp.index
+            st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai"]])
 
-with tab_recap:
-    st.markdown("#### Tableau récapitulatif complet de la station")
-    if not df_temp.empty:
-        df_temp['ID'] = df_temp.index
-        st.dataframe(df_temp[["ID", "Date_Saisie", "Agent", "Type_Message_Fichier", "Heure_Transmission", "Statut_Delai"]])
-
-        col_e1, col_e2 = st.columns(2)
-        with col_e1:
-            st.markdown("##### 📝 Corriger une ligne")
-            id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1)
-            if id_m in df_stats.index:
-                with st.form("f_ed"):
-                    n_h = st.text_input("Heure transmission", value=str(df_stats.at[id_m, 'Heure_Transmission']))
-                    n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"])
-                    if st.form_submit_button("Sauvegarder"):
-                        df_stats.at[id_m, 'Heure_Transmission'] = n_h
-                        df_stats.at[id_m, 'Statut_Delai'] = n_s
-                        st.success("Ligne modifiée !")
+            col_e1, col_e2 = st.columns(2)
+            with col_e1:
+                st.markdown("##### 📝 Corriger une ligne")
+                id_m = st.number_input("ID message :", min_value=0, max_value=10000, step=1)
+                if id_m in df_stats.index:
+                    with st.form("f_ed"):
+                        n_h = st.text_input("Heure transmission", value=str(df_stats.at[id_m, 'Heure_Transmission']))
+                        n_s = st.selectbox("Statut", ["Transmis dans le délai", "Transmis hors délai"])
+                        if st.form_submit_button("Sauvegarder"):
+                            df_stats.at[id_m, 'Heure_Transmission'] = n_h
+                            df_stats.at[id_m, 'Statut_Delai'] = n_s
+                            st.success("Ligne modifiée !")
+                            st.rerun()
+            with col_e2:
+                st.markdown("##### 🗑️ Supprimer une ligne")
+                id_s = st.number_input("ID à supprimer :", min_value=0, max_value=10000, step=1)
+                if st.button("Confirmer l'effacement", use_container_width=True):
+                    if id_s in df_stats.index:
+                        df_stats.drop(index=id_s).to_csv(FICHIER_BDD, index=False)
+                        st.success("Ligne retirée !")
                         st.rerun()
-        with col_e2:
-            st.markdown("##### 🗑️ Supprimer une ligne")
-            id_s = st.number_input("ID à supprimer :", min_value=0, max_value=10000, step=1)
-            if st.button("Confirmer l'effacement", use_container_width=True):
-                if id_s in df_stats.index:
-                    df_stats.drop(index=id_s).to_csv(FICHIER_BDD, index=False)
-                    st.success("Ligne retirée !")
-                    st.rerun()
-    else:
-        st.info("Aucun message enregistré pour cette période.")
+        else:
+            st.info("Aucun message enregistré pour cette période.")
 
-with tab_podium:
-    st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
-    if not df_temp.empty:
-        stats_ag = []
-        for ag in df_temp["Agent"].unique():
-            df_ag = df_temp[df_temp["Agent"] == ag]
-            t_ag = len(df_ag)
-            d_ag = len(df_ag[df_ag["Statut_Delai"] == "Transmis dans le délai"])
-            tx = (d_ag / t_ag * 100) if t_ag > 0 else 0
-            stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": tx})
-        
-        df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
-        df_cl.index += 1
-        st.dataframe(df_cl, use_container_width=True)
-        
-        for idx, row in df_cl.iterrows():
-            med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
-            st.markdown(f"<div class='podium-box'><b>{med}</b> : {row['Agent']} - Efficacité : {row['Taux de réussite (%)']:.1f}%</div>", unsafe_allow_html=True)
-    else:
-        st.info("Aucune donnée d'agent sur cette période.")
+    with tab_podium:
+        st.markdown(f"### 🏆 Performances et Classement des Agents ({mois_sel} {annee_sel})")
+        if not df_temp.empty:
+            stats_ag = []
+            for ag in df_temp["Agent"].unique():
+                df_ag = df_temp[df_temp["Agent"] == ag]
+                t_ag = len(df_ag)
+                d_ag = len(df_ag[df_ag["Statut_Delai"] == "Transmis dans le délai"])
+                tx = (d_ag / t_ag * 100) if t_ag > 0 else 0
+                stats_ag.append({"Agent": ag, "Messages Transmis": t_ag, "Dans les délais": d_ag, "Taux de réussite (%)": tx})
+            
+            df_cl = pd.DataFrame(stats_ag).sort_values(by="Taux de réussite (%)", ascending=False).reset_index(drop=True)
+            df_cl.index += 1
+            st.dataframe(df_cl, use_container_width=True)
+            
+            for idx, row in df_cl.iterrows():
+                med = "🥇 1ère Place" if idx == 1 else ("🥈 2ème Place" if idx == 2 else "🥉 3ème Place")
+                st.markdown(f"<div class='podium-box'><b>{med}</b> : {row['Agent']} - Efficacité : {row['Taux de réussite (%)']:.1f}%</div>", unsafe_allow_html=True)
+        else:
+            st.info("Aucune donnée d'agent sur cette période.")
 

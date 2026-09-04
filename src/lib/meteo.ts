@@ -85,6 +85,46 @@ export interface Record {
   date: string;
   serviceStart: string;
   serviceEnd: string;
+  /** Corps du message tel que rédigé et transmis. */
+  body?: string;
+  /** Message vérifié par le chef de station. */
+  verified?: boolean;
+}
+
+/** Date "jj/mm/aaaa" -> "aaaa-mm-jj" (valeur d'un input date). */
+export function frToIso(d: string): string {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : "";
+}
+
+/** "aaaa-mm-jj" -> "jj/mm/aaaa". */
+export function isoToFr(d: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+}
+
+export function todayIso(ref: Date = new Date()): string {
+  return `${ref.getFullYear()}-${pad(ref.getMonth() + 1)}-${pad(ref.getDate())}`;
+}
+
+/**
+ * Un doublon = même agent, même type, même heure de message, le même jour.
+ * `excludeId` permet de modifier un enregistrement sans se comparer à lui-même.
+ */
+export function findDuplicate(
+  records: Record[],
+  candidate: { agent: string; type: string; hour: number; minute: number; date: string },
+  excludeId?: string,
+): Record | undefined {
+  return records.find(
+    (r) =>
+      r.id !== excludeId &&
+      r.agent === candidate.agent &&
+      r.type === candidate.type &&
+      r.hour === candidate.hour &&
+      r.minute === candidate.minute &&
+      r.date === candidate.date,
+  );
 }
 
 /**

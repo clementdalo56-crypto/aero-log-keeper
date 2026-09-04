@@ -415,19 +415,18 @@ else:
                 "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
             })
 
-        # --- CE BLOC EST MAINTENANT HORS DE LA BOUCLE (Avancé à 8 espaces) ---
-        df_affichage = pd.DataFrame(lignes_decompte)
+               df_affichage = pd.DataFrame(lignes_decompte)
         st.table(df_affichage.style.map(lambda x: 'color: #D4AF37; font-weight: bold;'))
 
         st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé")
         st.markdown("### 📊 Ventilation Visuelle")
         
-                c_g1, c_g2 = st.columns(2)
-                if not df_temp.empty:
-                    with c_g1: 
-                        st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
-                    with c_g2: 
-                        st.bar_chart(df_temp['Statut_Delai'].value_counts())
+        c_g1, c_g2 = st.columns(2)
+        if not df_temp.empty:
+            with c_g1: 
+                st.bar_chart(df_temp['Type_Message_Fichier'].value_counts())
+            with c_g2: 
+                st.bar_chart(df_temp['Statut_Delai'].value_counts())
 
 
         with tab_recap:

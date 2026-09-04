@@ -379,36 +379,38 @@ else:
         with k2: st.markdown(f'<div class="kpi-box" style="border-top-color:#16a34a;"><div class="kpi-title">DANS LE DÉLAI</div><div class="kpi-value" style="color:#16a34a;">{dans_delai}</div></div>', unsafe_allow_html=True)
         with k3: st.markdown(f'<div class="kpi-box" style="border-top-color:#ef4444;"><div class="kpi-title">HORS DÉLAI</div><div class="kpi-value" style="color:#ef4444;">{hors_delai}</div></div>', unsafe_allow_html=True)
         with k4: st.markdown(f'<div class="kpi-box" style="border-top-color:#06b6d4;"><div class="kpi-title">TAUX DE PONCTUALITÉ</div><div class="kpi-value" style="color:#06b6d4;">{taux_ponct:.0f}%</div></div>', unsafe_allow_html=True)
-tab_decompte, tab_recap, tab_podium = st.tabs(["📋 Décompte Réglementaire par type", "🗂️ Tableau Récapitulatif", "🏆 Classement des Agents"])
-        
-        with tab_decompte:
-            st.markdown(f"#### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
-            types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
-            quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
             
-            lignes_decompte = []
-            # Exemple si vous parcourez une liste de données :
-for item in liste_de_donnees:  
-    if not df_temp.empty:
-                    df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
-                else:
-                    df_type = pd.DataFrame()
-                    
-                cnt_transmis = len(df_type)
-                cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"]) if not df_type.empty else 0
-                cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"]) if not df_type.empty else 0
-                
-                quota_th = quotas_reels[tm]
-                cnt_manquant = max(0, quota_th - cnt_transmis) if quota_th > 0 else 0
-                
-                pct_delai = f"{cnt_delai} ({(cnt_delai/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_delai}"
-                pct_hors = f"{cnt_hors} ({(cnt_hors/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_hors}"
-                pct_manq = f"{cnt_manquant} ({(cnt_manquant/quota_th*100):.1f}%)" if quota_th > 0 else "0"
-                
-                lignes_decompte.append({
-                    "Type de message": tm, "Attendus": quota_th,
-                    "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
-                })
+    tab_decompte, tab_recap, tab_podium = st.tabs(["📝 Décompte Réglementaire par type", "📊 Tableau Récapitulatif", "🏆 Classement des Agents"])
+
+    with tab_decompte:
+        st.markdown(f"##### Décompte par type de message — {maintenant.strftime('%d/%m/%Y')}")
+        types_meteo = ["METAR", "METREPORT", "SPECI", "SYNOP Horaire", "SYNOP Principal"]
+        quotas_reels = {"METAR": 14, "METREPORT": 14, "SPECI": 0, "SYNOP Horaire": 24, "SYNOP Principal": 8}
+
+        lignes_decompte = []
+
+        # Boucle corrigée pour parcourir vos vrais types météo
+        for tm in types_meteo:
+            if not df_temp.empty:
+                df_type = df_temp[df_temp["Type_Message_Fichier"] == tm]
+            else:
+                df_type = pd.DataFrame()
+
+            cnt_transmis = len(df_type)
+            cnt_delai = len(df_type[df_type["Statut_Delai"] == "Transmis dans le délai"]) if not df_type.empty else 0
+            cnt_hors = len(df_type[df_type["Statut_Delai"] == "Transmis hors délai"]) if not df_type.empty else 0
+
+            quota_th = quotas_reels[tm]
+            cnt_manquant = max(0, quota_th - cnt_transmis) if quota_th > 0 else 0
+
+            pct_delai = f"{cnt_delai} ({(cnt_delai/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_delai}"
+            pct_hors = f"{cnt_hors} ({(cnt_hors/quota_th*100):.1f}%)" if quota_th > 0 else f"{cnt_hors}"
+            pct_manq = f"{cnt_manquant} ({(cnt_manquant/quota_th*100):.1f}%)" if quota_th > 0 else "0"
+
+            lignes_decompte.append({
+                "Type de message": tm, "Attendus": quota_th,
+                "Dans le délai": pct_delai, "Hors délai": pct_hors, "Non transmis": pct_manq
+            })
             
             st.table(pd.DataFrame(lignes_decompte))
             st.info("💡 Note : Les SPECI étant déclenchés à la demande, aucun décompte théorique ou « non transmis » n'est calculé pour ce type.")

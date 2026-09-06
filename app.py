@@ -334,9 +334,15 @@ else:
                         "Statut_Delai": "Transmis dans le délai", 
                         "Details": "Fichier Excel TCM déposé"
                     }
-            df_stats = pd.concat([df_stats, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
-            df_stats.to_csv(FICHIER_BDD, index=False)
-            st.success("Excel archivé.")
+                   # Charger la base de données si elle n'existe pas encore en mémoire
+        if 'df_stats' not in locals():
+            import pandas as pd
+            df_stats = pd.read_csv(FICHIER_BDD)
+
+        # Ajouter la nouvelle ligne et sauvegarder
+        df_stats = pd.concat([df_stats, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
+        df_stats.to_csv(FICHIER_BDD, index=False)
+        st.success("Excel archivé.")
             o_csv(FICHIER_BDD, index=False)
 
 

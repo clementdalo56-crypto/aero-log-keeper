@@ -334,8 +334,10 @@ else:
                         "Statut_Delai": "Transmis dans le délai", 
                         "Details": "Fichier Excel TCM déposé"
                     }
-                        # Charger la base de données si elle n'existe pas encore en mémoire
-        if 'df_stats' not in locals():
+                                # Charger la base de données de sécurité si elle n'est pas trouvée
+        try:
+            df_stats
+        except NameError:
             import pandas as pd
             df_stats = pd.read_csv(FICHIER_BDD)
 
@@ -343,6 +345,7 @@ else:
         df_stats = pd.concat([df_stats, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
         df_stats.to_csv(FICHIER_BDD, index=False)
         st.success("Excel archivé.")
+
 
 
 

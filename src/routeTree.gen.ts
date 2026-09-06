@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentsRouteImport } from './routes/agents'
+import { Route as GraphiquesRouteImport } from './routes/graphiques'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ObservationsRouteImport } from './routes/observations'
+import { Route as RechercheRouteImport } from './routes/recherche'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AgentsRoute = AgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GraphiquesRoute = GraphiquesRouteImport.update({
+  id: '/graphiques',
+  path: '/graphiques',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoriqueRoute = HistoriqueRouteImport.update({
@@ -40,43 +47,78 @@ const ObservationsRoute = ObservationsRouteImport.update({
   path: '/observations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RechercheRoute = RechercheRouteImport.update({
+  id: '/recherche',
+  path: '/recherche',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/graphiques': typeof GraphiquesRoute
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
   '/observations': typeof ObservationsRoute
+  '/recherche': typeof RechercheRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/graphiques': typeof GraphiquesRoute
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
   '/observations': typeof ObservationsRoute
+  '/recherche': typeof RechercheRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
+  '/graphiques': typeof GraphiquesRoute
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
   '/observations': typeof ObservationsRoute
+  '/recherche': typeof RechercheRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/historique' | '/import' | '/observations'
+  fullPaths:
+    | '/'
+    | '/agents'
+    | '/graphiques'
+    | '/historique'
+    | '/import'
+    | '/observations'
+    | '/recherche'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/historique' | '/import' | '/observations'
-  id: '__root__' | '/' | '/agents' | '/historique' | '/import' | '/observations'
+  to:
+    | '/'
+    | '/agents'
+    | '/graphiques'
+    | '/historique'
+    | '/import'
+    | '/observations'
+    | '/recherche'
+  id:
+    | '__root__'
+    | '/'
+    | '/agents'
+    | '/graphiques'
+    | '/historique'
+    | '/import'
+    | '/observations'
+    | '/recherche'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentsRoute: typeof AgentsRoute
+  GraphiquesRoute: typeof GraphiquesRoute
   HistoriqueRoute: typeof HistoriqueRoute
   ImportRoute: typeof ImportRoute
   ObservationsRoute: typeof ObservationsRoute
+  RechercheRoute: typeof RechercheRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -93,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/agents'
       preLoaderRoute: typeof AgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/graphiques': {
+      id: '/graphiques'
+      path: '/graphiques'
+      fullPath: '/graphiques'
+      preLoaderRoute: typeof GraphiquesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/historique': {
@@ -116,15 +165,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObservationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recherche': {
+      id: '/recherche'
+      path: '/recherche'
+      fullPath: '/recherche'
+      preLoaderRoute: typeof RechercheRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentsRoute: AgentsRoute,
+  GraphiquesRoute: GraphiquesRoute,
   HistoriqueRoute: HistoriqueRoute,
   ImportRoute: ImportRoute,
   ObservationsRoute: ObservationsRoute,
+  RechercheRoute: RechercheRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

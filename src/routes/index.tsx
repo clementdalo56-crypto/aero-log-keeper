@@ -112,6 +112,25 @@ function Index() {
   const deadline =
     hourNum !== null ? deadlineFrom(hourNum, minuteNum) : null;
 
+  const maxDate = todayIso(now ?? new Date());
+  const effectiveDateIso = dateIso || maxDate;
+  const dateInFuture = effectiveDateIso > maxDate;
+
+  const duplicate =
+    agent && type && hourNum !== null
+      ? findDuplicate(
+          records,
+          {
+            agent,
+            type,
+            hour: hourNum,
+            minute: minuteNum,
+            date: isoToFr(effectiveDateIso),
+          },
+          editingId ?? undefined,
+        )
+      : undefined;
+
   const filtered = useMemo(
     () => (filter === "all" ? records : records.filter((r) => r.agent === filter)),
     [records, filter],
@@ -135,6 +154,40 @@ function Index() {
     };
   }, [filtered]);
 
+  function resetForm() {
+    setEditingId(null);
+    setAgent("");
+    setType("");
+    setHour("");
+    setMinute("00");
+    setTransmitTime("");
+    setServiceStart("");
+    setServiceEnd("");
+    setDateIso("");
+    setBody("");
+  }
+
+  function startEdit(r: MeteoRecord) {
+    setEditingId(r.id);
+    setAgent(r.agent);
+    setType(r.type);
+    setHour(String(r.hour));
+    setMinute(pad(r.minute));
+    setTransmitTime(r.transmittedAt.replace("h", ":"));
+    setServiceStart(r.serviceStart === "—" ? "" : r.serviceStart);
+    setServiceEnd(r.serviceEnd === "—" ? "" : r.serviceEnd);
+    setDateIso(frToIso(r.date));
+    setBody(r.body ?? "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function supprimer(r: MeteoRecord) {
+    if (!window.confirm(`Supprimer le message ${r.type} de ${formatHM(r.hour, r.minute)} ?`)) return;
+    setRecords((prev) => prev.filter((x) => x.id !== r.id));
+    if (editingId === r.id) resetForm();
+    toast.success("Message supprimé.");
+  }
+
   function transmettre() {
     if (!agent || !type || hourNum === null) {
       toast.error("Veuillez renseigner l'agent, le type de message et l'heure.");
@@ -144,8 +197,18 @@ function Index() {
       toast.error("Heure non valide pour ce type de message.");
       return;
     }
+    if (dateInFuture) {
+      toast.error("La date du message ne peut pas être dans le futur.");
+      return;
+    }
     if (!/^\d{2}:\d{2}$/.test(transmitTime)) {
       toast.error("Veuillez saisir l'heure réelle de transmission.");
+      return;
+    }
+    if (duplicate) {
+      toast.error(
+        `Doublon : un message ${type} de ${formatHM(hourNum, minuteNum)} existe déjà pour ${agent} ce jour-là.`,
+      );
       return;
     }
     const parts = transmitTime.split(":").map(Number);
@@ -154,7 +217,7 @@ function Index() {
     const { status, delayMinutes } = computeStatus(hourNum, minuteNum, th, tm);
     const d = deadlineFrom(hourNum, minuteNum);
     const rec: MeteoRecord = {
-      id: crypto.randomUUID(),
+      id: editingId ?? crypto.randomUUID(),
       agent,
       type,
       hour: hourNum,
@@ -162,17 +225,26 @@ function Index() {
       deadline: formatHM(d.h, d.m),
       transmittedAt: formatHM(th, tm),
       status,
-      date: new Date().toLocaleDateString("fr-FR"),
+      date: isoToFr(effectiveDateIso),
       serviceStart: serviceStart || "—",
       serviceEnd: serviceEnd || "—",
+      body: body.trim(),
+      verified: false,
     };
-    setRecords((prev) => [rec, ...prev]);
-    if (status === "Dans le délai") {
-      toast.success(`Transmis dans le délai (limite ${rec.deadline}).`);
+    if (editingId) {
+      setRecords((prev) => prev.map((x) => (x.id === editingId ? rec : x)));
+      toast.success("Message modifié.");
     } else {
-      toast.error(`Hors délai de ${delayMinutes} min (limite ${rec.deadline}).`);
+      setRecords((prev) => [rec, ...prev]);
+      if (status === "Dans le délai") {
+        toast.success(`Transmis dans le délai (limite ${rec.deadline}).`);
+      } else {
+        toast.error(`Hors délai de ${delayMinutes} min (limite ${rec.deadline}).`);
+      }
     }
+    resetForm();
   }
+
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 md:px-8">
@@ -201,8 +273,15 @@ function Index() {
         </header>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Saisie d'un message</CardTitle>
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-base">
+              {editingId ? "Modification d'un message" : "Saisie d'un message"}
+            </CardTitle>
+            {editingId && (
+              <Button variant="ghost" size="sm" onClick={resetForm}>
+                <X className="mr-1 size-4" /> Annuler la modification
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-4">
@@ -271,7 +350,18 @@ function Index() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Date du message</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  max={maxDate}
+                  value={effectiveDateIso}
+                  aria-invalid={dateInFuture}
+                  onChange={(e) => setDateIso(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="transmit">Heure réelle de transmission</Label>
                 <Input
@@ -301,6 +391,40 @@ function Index() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="body">Corps du message</Label>
+              <Textarea
+                id="body"
+                rows={3}
+                maxLength={1000}
+                placeholder="Ex. METAR DIAP 041000Z 9999 SCT013 25/23 Q1013"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Le chef de station pourra vérifier et corriger ce texte depuis l'historique.
+              </p>
+            </div>
+
+            {dateInFuture && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>Les dates futures ne sont pas autorisées.</span>
+              </div>
+            )}
+
+            {duplicate && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  Doublon : un message {type} de {hourNum !== null ? formatHM(hourNum, minuteNum) : ""}{" "}
+                  a déjà été saisi pour {agent} le {duplicate.date}.
+                </span>
+              </div>
+            )}
+
+
             {type && (
               <p className="text-xs text-muted-foreground">{hourRuleLabel(type)}</p>
             )}
@@ -322,8 +446,11 @@ function Index() {
                   {deadline ? formatHM(deadline.h, deadline.m) : "--h--"}
                 </span>
               </div>
-              <Button onClick={transmettre} disabled={hourInvalid}>
-                Transmettre
+              <Button
+                onClick={transmettre}
+                disabled={hourInvalid || dateInFuture || !!duplicate}
+              >
+                {editingId ? "Enregistrer les modifications" : "Transmettre"}
               </Button>
             </div>
           </CardContent>
@@ -451,7 +578,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-base">Tableau récapitulatif</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -463,13 +590,15 @@ function Index() {
                   <TableHead>Transmis à</TableHead>
                   <TableHead>Prise de service</TableHead>
                   <TableHead>Descente</TableHead>
+                  <TableHead>Corps du message</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                       Aucun message enregistré pour ce filtre.
                     </TableCell>
                   </TableRow>
@@ -484,6 +613,9 @@ function Index() {
                       <TableCell className="font-mono">{r.transmittedAt}</TableCell>
                       <TableCell className="font-mono">{r.serviceStart ?? "—"}</TableCell>
                       <TableCell className="font-mono">{r.serviceEnd ?? "—"}</TableCell>
+                      <TableCell className="max-w-64 truncate font-mono text-xs" title={r.body}>
+                        {r.body || "—"}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={r.status === "Dans le délai" ? "secondary" : "destructive"}
@@ -500,6 +632,25 @@ function Index() {
                           )}
                           {r.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Modifier"
+                          onClick={() => startEdit(r)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Supprimer"
+                          className="text-destructive"
+                          onClick={() => supprimer(r)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

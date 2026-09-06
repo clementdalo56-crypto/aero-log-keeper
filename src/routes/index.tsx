@@ -273,8 +273,15 @@ function Index() {
         </header>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Saisie d'un message</CardTitle>
+          <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle className="text-base">
+              {editingId ? "Modification d'un message" : "Saisie d'un message"}
+            </CardTitle>
+            {editingId && (
+              <Button variant="ghost" size="sm" onClick={resetForm}>
+                <X className="mr-1 size-4" /> Annuler la modification
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-4">

@@ -15,6 +15,7 @@ import { Route as GraphiquesRouteImport } from './routes/graphiques'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ObservationsRouteImport } from './routes/observations'
+import { Route as RechercheRouteImport } from './routes/recherche'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const ObservationsRoute = ObservationsRouteImport.update({
   path: '/observations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RechercheRoute = RechercheRouteImport.update({
+  id: '/recherche',
+  path: '/recherche',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
   '/observations': typeof ObservationsRoute
+  '/recherche': typeof RechercheRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
   '/observations': typeof ObservationsRoute
+  '/recherche': typeof RechercheRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/historique': typeof HistoriqueRoute
   '/import': typeof ImportRoute
   '/observations': typeof ObservationsRoute
+  '/recherche': typeof RechercheRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +90,7 @@ export interface FileRouteTypes {
     | '/historique'
     | '/import'
     | '/observations'
+    | '/recherche'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/historique'
     | '/import'
     | '/observations'
+    | '/recherche'
   id:
     | '__root__'
     | '/'
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/historique'
     | '/import'
     | '/observations'
+    | '/recherche'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +118,7 @@ export interface RootRouteChildren {
   HistoriqueRoute: typeof HistoriqueRoute
   ImportRoute: typeof ImportRoute
   ObservationsRoute: typeof ObservationsRoute
+  RechercheRoute: typeof RechercheRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -152,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ObservationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recherche': {
+      id: '/recherche'
+      path: '/recherche'
+      fullPath: '/recherche'
+      preLoaderRoute: typeof RechercheRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   HistoriqueRoute: HistoriqueRoute,
   ImportRoute: ImportRoute,
   ObservationsRoute: ObservationsRoute,
+  RechercheRoute: RechercheRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

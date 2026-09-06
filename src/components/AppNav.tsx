@@ -4,6 +4,8 @@ import { CloudSun } from "lucide-react";
 const LINKS = [
   { to: "/", label: "Saisie" },
   { to: "/agents", label: "Tableau de bord agents" },
+  { to: "/graphiques", label: "Graphiques" },
+  { to: "/recherche", label: "Recherche" },
   { to: "/import", label: "Import CSV" },
   { to: "/historique", label: "Historique" },
   { to: "/observations", label: "Observations" },

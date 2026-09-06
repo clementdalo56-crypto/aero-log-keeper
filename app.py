@@ -334,9 +334,9 @@ else:
                         "Statut_Delai": "Transmis dans le délai", 
                         "Details": "Fichier Excel TCM déposé"
                     }
-                                        # Importer pandas et charger directement la base de données depuis le fichier CSV
-        import pandas as pd
-        df_actuel = pd.read_csv(FICHIER_BDD)
+               # Initialisation de sécurité pour nouvelle_ligne si absente
+        if 'nouvelle_ligne' not in locals():
+            nouvelle_ligne = {}
 
         # Ajouter la nouvelle ligne au tableau chargé
         df_stats = pd.concat([df_actuel, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
@@ -344,6 +344,7 @@ else:
         # Sauvegarder immédiatement dans le fichier CSV
         df_stats.to_csv(FICHIER_BDD, index=False)
         st.success("Excel archivé.")
+
 
     # --- SOUS-MENU 7 : CAHIER D'OBSERVATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":

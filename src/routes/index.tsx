@@ -112,6 +112,25 @@ function Index() {
   const deadline =
     hourNum !== null ? deadlineFrom(hourNum, minuteNum) : null;
 
+  const maxDate = todayIso(now ?? new Date());
+  const effectiveDateIso = dateIso || maxDate;
+  const dateInFuture = effectiveDateIso > maxDate;
+
+  const duplicate =
+    agent && type && hourNum !== null
+      ? findDuplicate(
+          records,
+          {
+            agent,
+            type,
+            hour: hourNum,
+            minute: minuteNum,
+            date: isoToFr(effectiveDateIso),
+          },
+          editingId ?? undefined,
+        )
+      : undefined;
+
   const filtered = useMemo(
     () => (filter === "all" ? records : records.filter((r) => r.agent === filter)),
     [records, filter],
@@ -135,6 +154,40 @@ function Index() {
     };
   }, [filtered]);
 
+  function resetForm() {
+    setEditingId(null);
+    setAgent("");
+    setType("");
+    setHour("");
+    setMinute("00");
+    setTransmitTime("");
+    setServiceStart("");
+    setServiceEnd("");
+    setDateIso("");
+    setBody("");
+  }
+
+  function startEdit(r: MeteoRecord) {
+    setEditingId(r.id);
+    setAgent(r.agent);
+    setType(r.type);
+    setHour(String(r.hour));
+    setMinute(pad(r.minute));
+    setTransmitTime(r.transmittedAt.replace("h", ":"));
+    setServiceStart(r.serviceStart === "—" ? "" : r.serviceStart);
+    setServiceEnd(r.serviceEnd === "—" ? "" : r.serviceEnd);
+    setDateIso(frToIso(r.date));
+    setBody(r.body ?? "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function supprimer(r: MeteoRecord) {
+    if (!window.confirm(`Supprimer le message ${r.type} de ${formatHM(r.hour, r.minute)} ?`)) return;
+    setRecords((prev) => prev.filter((x) => x.id !== r.id));
+    if (editingId === r.id) resetForm();
+    toast.success("Message supprimé.");
+  }
+
   function transmettre() {
     if (!agent || !type || hourNum === null) {
       toast.error("Veuillez renseigner l'agent, le type de message et l'heure.");
@@ -144,8 +197,18 @@ function Index() {
       toast.error("Heure non valide pour ce type de message.");
       return;
     }
+    if (dateInFuture) {
+      toast.error("La date du message ne peut pas être dans le futur.");
+      return;
+    }
     if (!/^\d{2}:\d{2}$/.test(transmitTime)) {
       toast.error("Veuillez saisir l'heure réelle de transmission.");
+      return;
+    }
+    if (duplicate) {
+      toast.error(
+        `Doublon : un message ${type} de ${formatHM(hourNum, minuteNum)} existe déjà pour ${agent} ce jour-là.`,
+      );
       return;
     }
     const parts = transmitTime.split(":").map(Number);
@@ -154,7 +217,7 @@ function Index() {
     const { status, delayMinutes } = computeStatus(hourNum, minuteNum, th, tm);
     const d = deadlineFrom(hourNum, minuteNum);
     const rec: MeteoRecord = {
-      id: crypto.randomUUID(),
+      id: editingId ?? crypto.randomUUID(),
       agent,
       type,
       hour: hourNum,
@@ -162,17 +225,26 @@ function Index() {
       deadline: formatHM(d.h, d.m),
       transmittedAt: formatHM(th, tm),
       status,
-      date: new Date().toLocaleDateString("fr-FR"),
+      date: isoToFr(effectiveDateIso),
       serviceStart: serviceStart || "—",
       serviceEnd: serviceEnd || "—",
+      body: body.trim(),
+      verified: false,
     };
-    setRecords((prev) => [rec, ...prev]);
-    if (status === "Dans le délai") {
-      toast.success(`Transmis dans le délai (limite ${rec.deadline}).`);
+    if (editingId) {
+      setRecords((prev) => prev.map((x) => (x.id === editingId ? rec : x)));
+      toast.success("Message modifié.");
     } else {
-      toast.error(`Hors délai de ${delayMinutes} min (limite ${rec.deadline}).`);
+      setRecords((prev) => [rec, ...prev]);
+      if (status === "Dans le délai") {
+        toast.success(`Transmis dans le délai (limite ${rec.deadline}).`);
+      } else {
+        toast.error(`Hors délai de ${delayMinutes} min (limite ${rec.deadline}).`);
+      }
     }
+    resetForm();
   }
+
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 md:px-8">

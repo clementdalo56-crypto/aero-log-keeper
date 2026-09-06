@@ -446,8 +446,11 @@ function Index() {
                   {deadline ? formatHM(deadline.h, deadline.m) : "--h--"}
                 </span>
               </div>
-              <Button onClick={transmettre} disabled={hourInvalid}>
-                Transmettre
+              <Button
+                onClick={transmettre}
+                disabled={hourInvalid || dateInFuture || !!duplicate}
+              >
+                {editingId ? "Enregistrer les modifications" : "Transmettre"}
               </Button>
             </div>
           </CardContent>

@@ -350,7 +350,18 @@ function Index() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Date du message</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  max={maxDate}
+                  value={effectiveDateIso}
+                  aria-invalid={dateInFuture}
+                  onChange={(e) => setDateIso(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="transmit">Heure réelle de transmission</Label>
                 <Input
@@ -379,6 +390,40 @@ function Index() {
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="body">Corps du message</Label>
+              <Textarea
+                id="body"
+                rows={3}
+                maxLength={1000}
+                placeholder="Ex. METAR DIAP 041000Z 9999 SCT013 25/23 Q1013"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Le chef de station pourra vérifier et corriger ce texte depuis l'historique.
+              </p>
+            </div>
+
+            {dateInFuture && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>Les dates futures ne sont pas autorisées.</span>
+              </div>
+            )}
+
+            {duplicate && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  Doublon : un message {type} de {hourNum !== null ? formatHM(hourNum, minuteNum) : ""}{" "}
+                  a déjà été saisi pour {agent} le {duplicate.date}.
+                </span>
+              </div>
+            )}
+
 
             {type && (
               <p className="text-xs text-muted-foreground">{hourRuleLabel(type)}</p>

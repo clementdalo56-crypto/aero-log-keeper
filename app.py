@@ -279,7 +279,7 @@ else:
                     nouvelle_ligne = {
                         "Date_Saisie": date_saisie, "Heure_Saisie": heure_informatique, "Date_Donnees": dt_d,
                         "Mois": maintenant.strftime("%B"), "Annee": maintenant.strftime("%Y"), "Agent": agent_actif,
-                        "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Transmission", "h_tr.strip()",
+                                "Categorie": "Données Extrêmes", "Type_Message_Fichier": "DONNEES EXTREMES", "Heure_Transmission": h_tr.strip(),
                         "Statut_Delai": statut, "Details": f"TMAX: {t_max} | TMIN: {t_min} | P: {p_mm}"
                     }
                     pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True).to_csv(FICHIER_BDD, index=False)

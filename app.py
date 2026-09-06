@@ -334,20 +334,16 @@ else:
                         "Statut_Delai": "Transmis dans le délai", 
                         "Details": "Fichier Excel TCM déposé"
                     }
-                                # Charger la base de données de sécurité si elle n'est pas trouvée
-        try:
-            df_stats
-        except NameError:
-            import pandas as pd
-            df_stats = pd.read_csv(FICHIER_BDD)
+                                        # Importer pandas et charger directement la base de données depuis le fichier CSV
+        import pandas as pd
+        df_actuel = pd.read_csv(FICHIER_BDD)
 
-        # Ajouter la nouvelle ligne et sauvegarder
-        df_stats = pd.concat([df_stats, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
+        # Ajouter la nouvelle ligne au tableau chargé
+        df_stats = pd.concat([df_actuel, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
+        
+        # Sauvegarder immédiatement dans le fichier CSV
         df_stats.to_csv(FICHIER_BDD, index=False)
         st.success("Excel archivé.")
-
-
-
 
     # --- SOUS-MENU 7 : CAHIER D'OBSERVATIONS ---
     elif choix_menu == "📝 Qualité & Justifications Hors Délai":

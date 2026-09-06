@@ -578,7 +578,7 @@ function Index() {
           <CardHeader>
             <CardTitle className="text-base">Tableau récapitulatif</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -590,13 +590,15 @@ function Index() {
                   <TableHead>Transmis à</TableHead>
                   <TableHead>Prise de service</TableHead>
                   <TableHead>Descente</TableHead>
+                  <TableHead>Corps du message</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                       Aucun message enregistré pour ce filtre.
                     </TableCell>
                   </TableRow>
@@ -611,6 +613,9 @@ function Index() {
                       <TableCell className="font-mono">{r.transmittedAt}</TableCell>
                       <TableCell className="font-mono">{r.serviceStart ?? "—"}</TableCell>
                       <TableCell className="font-mono">{r.serviceEnd ?? "—"}</TableCell>
+                      <TableCell className="max-w-64 truncate font-mono text-xs" title={r.body}>
+                        {r.body || "—"}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={r.status === "Dans le délai" ? "secondary" : "destructive"}
@@ -627,6 +632,25 @@ function Index() {
                           )}
                           {r.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Modifier"
+                          onClick={() => startEdit(r)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Supprimer"
+                          className="text-destructive"
+                          onClick={() => supprimer(r)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

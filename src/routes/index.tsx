@@ -216,6 +216,7 @@ function Index() {
     const tm = parts[1] ?? 0;
     const { status, delayMinutes } = computeStatus(hourNum, minuteNum, th, tm);
     const d = deadlineFrom(hourNum, minuteNum);
+    const previous = editingId ? records.find((x) => x.id === editingId) : undefined;
     const rec: MeteoRecord = {
       id: editingId ?? crypto.randomUUID(),
       agent,
@@ -229,7 +230,7 @@ function Index() {
       serviceStart: serviceStart || "—",
       serviceEnd: serviceEnd || "—",
       body: body.trim(),
-      verified: false,
+      verified: previous?.verified ?? false,
     };
     if (editingId) {
       setRecords((prev) => prev.map((x) => (x.id === editingId ? rec : x)));

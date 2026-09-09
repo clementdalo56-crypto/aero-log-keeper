@@ -13,10 +13,10 @@ const LINKS = [
 
 export function AppNav() {
   return (
-    <nav className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur">
+    <nav className="sticky top-0 z-40 border-t-4 border-t-primary border-b border-border bg-card/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 md:px-8">
         <span className="flex items-center gap-2 font-semibold">
-          <CloudSun className="size-5 text-primary" />
+          <CloudSun className="size-5 text-success" />
           Messages météo
         </span>
         <div className="flex flex-wrap items-center gap-1">
@@ -25,8 +25,8 @@ export function AppNav() {
               key={l.to}
               to={l.to}
               activeOptions={{ exact: l.to === "/" }}
-              className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              activeProps={{ className: "bg-secondary text-foreground font-medium" }}
+              className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-secondary-foreground"
+              activeProps={{ className: "bg-primary text-primary-foreground font-medium shadow-sm" }}
             >
               {l.label}
             </Link>

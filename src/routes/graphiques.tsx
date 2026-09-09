@@ -83,11 +83,8 @@ function GraphiquesPage() {
     return { agent: a.split(" ")[0], "Dans le délai": onTime, "Hors délai": list.length - onTime };
   });
 
-  const COLORS = [
-    "hsl(var(--success, 142 70% 45%))",
-    "hsl(var(--destructive))",
-    "hsl(var(--muted-foreground))",
-  ];
+  const STATUS_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
+  const AGENT_COLORS = ["var(--chart-4)", "var(--chart-5)"];
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 md:px-8">
@@ -138,20 +135,20 @@ function GraphiquesPage() {
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={byType}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="type" fontSize={11} interval={0} />
                 <YAxis fontSize={11} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: 8,
                   }}
                 />
                 <Legend />
-                <Bar dataKey="Dans le délai" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Hors délai" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Non transmis" fill={COLORS[2]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Dans le délai" fill={STATUS_COLORS[0]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Hors délai" fill={STATUS_COLORS[1]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="Non transmis" fill={STATUS_COLORS[2]} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -172,7 +169,7 @@ function GraphiquesPage() {
                   <PieChart>
                     <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={100} label>
                       {statusData.map((d, i) => (
-                        <Cell key={d.name} fill={COLORS[i % COLORS.length]} />
+                        <Cell key={d.name} fill={STATUS_COLORS[i % STATUS_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -190,13 +187,13 @@ function GraphiquesPage() {
             <CardContent className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={byAgent}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="agent" fontSize={11} interval={0} />
                   <YAxis fontSize={11} allowDecimals={false} />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="Dans le délai" stackId="a" fill={COLORS[0]} />
-                  <Bar dataKey="Hors délai" stackId="a" fill={COLORS[1]} />
+                  <Bar dataKey="Dans le délai" stackId="a" fill={AGENT_COLORS[0]} />
+                  <Bar dataKey="Hors délai" stackId="a" fill={AGENT_COLORS[1]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
